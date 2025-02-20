@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,6 +23,6 @@ public class User {
     private String password;
 
     private String roles;  // ROLE_USER, ROLE_ARTIST, ROLE_ADMIN
-    private Boolean isVerified = false; // Флаг верификации артиста
+    private Boolean isArtistRequested = false; // Флаг верификации артиста
 }
 

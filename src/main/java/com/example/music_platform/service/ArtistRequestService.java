@@ -28,6 +28,7 @@ public class ArtistRequestService {
         ArtistRequest request = new ArtistRequest();
         request.setUser(user);
         request.setStatus("PENDING");
+        user.setIsArtistRequested(true);
 
         artistRequestRepository.save(request);
     }
@@ -39,7 +40,7 @@ public class ArtistRequestService {
 
         User user = request.getUser();
         user.setRoles("ARTIST");
-        user.setIsVerified(true);
+//        user.setIsVerified(true);
 
         userRepository.save(user);
         request.setStatus("APPROVED");
@@ -57,7 +58,7 @@ public class ArtistRequestService {
 
     // Получить список заявок (для админ-панели)
     public List<ArtistRequest> getAllRequests() {
-        return artistRequestRepository.findAll();
+        return artistRequestRepository.findAllWithPending();
     }
 }
 

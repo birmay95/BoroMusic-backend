@@ -1,7 +1,5 @@
 package com.example.music_platform.controller;
 
-import com.example.music_platform.dto.TrackDTO;
-import com.example.music_platform.model.Playlist;
 import com.example.music_platform.model.Track;
 import com.example.music_platform.service.BackblazeFileService;
 import com.example.music_platform.service.StorageService;

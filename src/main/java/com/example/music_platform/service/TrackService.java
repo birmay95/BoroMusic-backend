@@ -1,6 +1,5 @@
 package com.example.music_platform.service;
 
-import com.example.music_platform.dto.TrackDTO;
 import com.example.music_platform.model.Genre;
 import com.example.music_platform.model.Playlist;
 import com.example.music_platform.model.Track;
@@ -10,7 +9,6 @@ import com.example.music_platform.repository.PlaylistRepository;
 import com.example.music_platform.repository.TrackRepository;
 import com.example.music_platform.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -22,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Transactional
@@ -34,10 +31,6 @@ public class TrackService {
     private final GenreRepository genreRepository;
     private final PlaylistRepository playlistRepository;
     private final UserRepository userRepository;
-
-    private TrackDTO convertToDTO(Track track) {
-        return new TrackDTO(track.getId(), track.getTitle(), track.getArtist(), track.getAlbum(), track.getFileName(), track.getContentType(), track.getFileSize(), track.getDuration(), track.getGenres());
-    }
 
     public Track getTrack(Long trackId) {
         return trackRepository.findTrackWithGenresById(trackId)
@@ -96,7 +89,7 @@ public class TrackService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!"ROLE_ARTIST".equals(user.getRoles()) || !user.getIsVerified()) {
+        if (!"ROLE_ARTIST".equals(user.getRoles())) {
             throw new RuntimeException("Only verified artists can upload tracks");
         }
 

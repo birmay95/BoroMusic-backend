@@ -1,15 +1,11 @@
 package com.example.music_platform.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -24,7 +20,7 @@ public class ArtistRequest {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
-    private String status = "PENDING"; // PENDING, APPROVED, REJECTED
+    private String status = "PENDING";
 
     private LocalDateTime createdAt = LocalDateTime.now();
 }

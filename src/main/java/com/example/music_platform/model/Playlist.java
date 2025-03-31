@@ -1,14 +1,16 @@
 package com.example.music_platform.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import lombok.NoArgsConstructor;
 
-import java.util.HashSet;
 import java.util.Set;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "playlists")
 public class Playlist {
@@ -22,7 +24,12 @@ public class Playlist {
 
     private String description;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
+    private User owner;
+
+    @ManyToMany
     @JoinTable(
             name = "playlist_tracks",
             joinColumns = @JoinColumn(name = "playlist_id"),

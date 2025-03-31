@@ -1,13 +1,14 @@
 package com.example.music_platform.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -21,8 +22,21 @@ public class User {
     private String email;
     private String username;
     private String password;
+    private String roles;
+    private boolean emailVerified = false;
 
-    private String roles;  // ROLE_USER, ROLE_ARTIST, ROLE_ADMIN
-    private Boolean isArtistRequested = false; // Флаг верификации артиста
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private VerificationToken verificationToken;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_favourites",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "track_id")
+    )
+    private Set<Track> favourites = new HashSet<>();
+
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.REMOVE)
+    private List<Playlist> playlists = new ArrayList<>();
 }
 

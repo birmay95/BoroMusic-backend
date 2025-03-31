@@ -2,14 +2,17 @@ package com.example.music_platform.service;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,18 +20,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.time.Duration;
 
-@Service
 @AllArgsConstructor
+@Service
 public class BackblazeFileService {
 
+    private final Dotenv dotenv = Dotenv.load();
+    private final String accessKey = dotenv.get("AWS_ACCESS_KEY");
+    private final String secretKey = dotenv.get("AWS_SECRET_KEY");
+    private final String endpoint = dotenv.get("AWS_S3_ENDPOINT");
+    private final String bucketName = dotenv.get("AWS_S3_BUCKET");
+    private final S3Presigner s3Presigner;
+    private static final Logger log = LoggerFactory.getLogger(BackblazeFileService.class);
 
-    private final Dotenv dotenv = Dotenv.load();  // Загрузка .env файла
 
-    private final String accessKey = dotenv.get("AWS_ACCESS_KEY_ID");
-    private final String secretKey = dotenv.get("AWS_SECRET_ACCESS_KEY");
-    private final String endpoint = dotenv.get("ENDPOINT_URL");
-    private final String bucketName = dotenv.get("BUCKET_NAME");
 
     private S3Client createS3Client() {
         AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKey, secretKey);
@@ -82,8 +88,6 @@ public class BackblazeFileService {
         }
     }
 
-
-
     public void listBuckets() {
         S3Client s3Client = createS3Client();
 
@@ -102,17 +106,36 @@ public class BackblazeFileService {
                 .build();
 
         s3Client.getObject(getObjectRequest, Paths.get(downloadPath));
-        System.out.println("File downloaded successfully to: " + downloadPath);
     }
 
     public InputStream downloadFileStream(String fileName) {
-        S3Client s3Client = createS3Client();
+        try {
+            S3Client s3Client = createS3Client();
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(fileName)
+                    .build();
+            return s3Client.getObject(getObjectRequest);
+        } catch (Exception e) {
+            log.error("Error when downloading: " + e.getMessage());
+            return null;
+        }
+    }
 
+
+    public String generateTemporaryUrl(String objectKey) {
+
+        String bucketName = Dotenv.load().get("AWS_S3_BUCKET");
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
-                .key(fileName)
+                .key(objectKey)
                 .build();
 
-        return s3Client.getObject(getObjectRequest);
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .getObjectRequest(getObjectRequest)
+                .signatureDuration(Duration.ofMinutes(10))
+                .build();
+
+        return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 }

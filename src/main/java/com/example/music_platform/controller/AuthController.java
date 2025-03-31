@@ -3,63 +3,51 @@ package com.example.music_platform.controller;
 import com.example.music_platform.dto.AuthRegister;
 import com.example.music_platform.dto.AuthRequest;
 import com.example.music_platform.dto.AuthResponse;
-import com.example.music_platform.model.User;
 import com.example.music_platform.service.AuthService;
-import com.example.music_platform.util.JwtUtil;
+import com.example.music_platform.service.VerificationTokenService;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
-@AllArgsConstructor
 @RequestMapping("/auth")
-//@CrossOrigin
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
-
+    private final VerificationTokenService verificationTokenService;
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
-        try {
-            return ResponseEntity.ok(authService.authorize(authRequest.getUsername(), authRequest.getPassword()));
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(401).body("Неправильное имя пользователя или пароль");
-        }
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest authRequest) {
+        AuthResponse response = authService.authorize(authRequest.getUsername(), authRequest.getPassword());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody AuthRegister authRegister) {
-        try {
-            return ResponseEntity.ok(authService.register(authRegister.getUsername(), authRegister.getPassword(), authRegister.getEmail()));
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(401).body("Неправильное имя пользователя или пароль");
-        } catch (IllegalStateException e) {
-            System.out.println(e.getMessage());
-            return ResponseEntity.status(400).body(e.getMessage());
-        }
+    public ResponseEntity<AuthResponse> register(@RequestBody AuthRegister authRegister) {
+        AuthResponse response = authService.register(authRegister.getUsername(), authRegister.getPassword(), authRegister.getEmail());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
+    public ResponseEntity<String> logout(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
-
-        // Валидация и деактивация токена (либо помечаем его в черный список, либо просто очищаем у клиента)
-        boolean isLoggedOut = authService.invalidateToken(token);
-
-        if (isLoggedOut) {
-            return ResponseEntity.ok("Logged out successfully");
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token or already logged out");
-        }
+        return ResponseEntity.ok(authService.invalidateToken(token));
     }
 
+    @GetMapping("/verification")
+    public ResponseEntity<String> verify(@RequestParam Long userId) {
+        return ResponseEntity.ok(authService.verify(userId));
+    }
+
+    @GetMapping("/check-verification")
+    public ResponseEntity<Boolean> checkEmailVerification(@RequestParam Long userId) {
+        return ResponseEntity.ok(authService.checkVerification(userId));
+    }
+
+    @GetMapping("/confirm")
+    public ResponseEntity<String> confirmEmail(@RequestParam String token, @RequestParam Long userId) {
+        return ResponseEntity.ok(verificationTokenService.confirmEmail(token, userId));
+    }
 }

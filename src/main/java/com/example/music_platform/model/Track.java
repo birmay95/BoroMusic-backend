@@ -7,8 +7,7 @@ import lombok.*;
 import java.util.Set;
 
 
-@Getter
-@Setter
+@Data
 @EqualsAndHashCode(of = {"id"})
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,16 +29,16 @@ public class Track {
     private String album;
 
     @Column(nullable = false)
-    private String fileName;  // Имя файла в хранилище
+    private String fileName;
 
     @Column(nullable = false)
-    private String contentType; // Тип контента, например "audio/mpeg"
+    private String contentType;
 
     @Column(nullable = false)
-    private Long fileSize;     // Размер файла в байтах
+    private Long fileSize;
 
     @Column(nullable = false)
-    private Long duration;    // Длительность трека в секундах
+    private Long duration;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

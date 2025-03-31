@@ -1,64 +1,73 @@
 package com.example.music_platform.service;
 
+import com.example.music_platform.exception.RequestNotFoundException;
+import com.example.music_platform.exception.UserNotFoundException;
 import com.example.music_platform.model.ArtistRequest;
 import com.example.music_platform.model.User;
 import com.example.music_platform.repository.ArtistRequestRepository;
 import com.example.music_platform.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@AllArgsConstructor
 @Service
-@RequiredArgsConstructor
 public class ArtistRequestService {
 
     private final ArtistRequestRepository artistRequestRepository;
     private final UserRepository userRepository;
 
-    // Отправка заявки
     public void requestArtistRole(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        if (artistRequestRepository.findByUserId(userId).isPresent()) {
-            throw new RuntimeException("Request already submitted");
+        ArtistRequest existingRequest = artistRequestRepository.findByUserId(userId).orElse(null);
+
+        if (existingRequest != null) {
+            if ("REJECTED".equals(existingRequest.getStatus())) {
+                existingRequest.setStatus("PENDING");
+                artistRequestRepository.save(existingRequest);
+            } else {
+                throw new RuntimeException("Request already submitted and is not rejected");
+            }
+        } else {
+            ArtistRequest newRequest = new ArtistRequest();
+            newRequest.setUser(user);
+            newRequest.setStatus("PENDING");
+
+            artistRequestRepository.save(newRequest);
         }
-
-        ArtistRequest request = new ArtistRequest();
-        request.setUser(user);
-        request.setStatus("PENDING");
-        user.setIsArtistRequested(true);
-
-        artistRequestRepository.save(request);
     }
 
-    // Администратор одобряет заявку
     public void approveArtist(Long requestId) {
         ArtistRequest request = artistRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Request not found"));
+                .orElseThrow(() -> new RequestNotFoundException("Request not found"));
 
         User user = request.getUser();
         user.setRoles("ARTIST");
-//        user.setIsVerified(true);
 
         userRepository.save(user);
         request.setStatus("APPROVED");
         artistRequestRepository.save(request);
     }
 
-    // Администратор отклоняет заявку
     public void rejectArtist(Long requestId) {
         ArtistRequest request = artistRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Request not found"));
+                .orElseThrow(() -> new RequestNotFoundException("Request not found"));
 
         request.setStatus("REJECTED");
         artistRequestRepository.save(request);
     }
 
-    // Получить список заявок (для админ-панели)
     public List<ArtistRequest> getAllRequests() {
-        return artistRequestRepository.findAllWithPending();
+        return artistRequestRepository.findAll();
     }
+
+    public ArtistRequest getRequest(Long userId) {
+        return artistRequestRepository.findByUserId(userId)
+                .orElseThrow(() -> new RequestNotFoundException("Request not found"));
+    }
+
 }
 

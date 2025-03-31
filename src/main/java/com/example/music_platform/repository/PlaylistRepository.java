@@ -10,10 +10,6 @@ import java.util.Optional;
 
 public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
 
-//    @Query("SELECT DISTINCT c FROM Playlist c "
-//            + "LEFT JOIN FETCH c.tracks WHERE c.id = :id")
-//    Optional<Playlist> findPlaylistWithTracksById(@Param("id") Long id);
-
     @Query("SELECT DISTINCT p FROM Playlist p LEFT JOIN FETCH p.tracks WHERE p.id = :playlistId")
     Optional<Playlist> findPlaylistWithTracksById(@Param("playlistId") Long playlistId);
 
@@ -27,6 +23,4 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
             "LEFT JOIN FETCH p.tracks t " +
             "LEFT JOIN FETCH t.genres ")
     List<Playlist> findAllWithTracksAndGenresById();
-
-
 }

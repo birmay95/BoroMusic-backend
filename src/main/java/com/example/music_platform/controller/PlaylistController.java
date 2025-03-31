@@ -3,24 +3,23 @@ package com.example.music_platform.controller;
 import com.example.music_platform.model.Playlist;
 import com.example.music_platform.model.Track;
 import com.example.music_platform.service.PlaylistService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Set;
 
-@AllArgsConstructor
 @RestController
 @RequestMapping("/playlists")
-@CrossOrigin
+@RequiredArgsConstructor
 public class PlaylistController {
 
     private final PlaylistService playlistService;
 
     @PostMapping
-    public ResponseEntity<Playlist> createPlaylist(@RequestParam String name, @RequestParam String description) {
-        Playlist playlist = playlistService.createPlaylist(name, description);
+    public ResponseEntity<Playlist> createPlaylist(@RequestParam String name, @RequestParam String description, @RequestParam Long userId) {
+        Playlist playlist = playlistService.createPlaylist(name, description, userId);
         return ResponseEntity.ok(playlist);
     }
 
@@ -55,7 +54,6 @@ public class PlaylistController {
         List<Playlist> playlists = playlistService.getPlaylists();
         return ResponseEntity.ok(playlists);
     }
-
 
     @DeleteMapping("/{playlistId}")
     public ResponseEntity<Void> deletePlaylist(@PathVariable Long playlistId) {

@@ -6,23 +6,24 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
+import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Entity
-@Table(name = "genres")
-public class Genre {
-
+@Table(name = "verification_token")
+public class VerificationToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String name;
+    private String token;
 
-    @ManyToMany(mappedBy = "genres", fetch = FetchType.LAZY)
+    @OneToOne
+    @JoinColumn(name = "user_id")
     @JsonIgnore
-    private Set<Track> tracks;
+    private User user;
+
+    private LocalDateTime expiryDate;
 }

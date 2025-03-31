@@ -29,7 +29,7 @@ public class AwsConfig {
                 .endpointOverride(URI.create(endpoint))
                 .region(Region.EU_CENTRAL_2)
                 .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(accessKey,secretKey)))
+                        AwsBasicCredentials.create(accessKey, secretKey)))
                 .build();
     }
 

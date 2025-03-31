@@ -1,5 +1,7 @@
 package com.example.music_platform.service;
 
+import com.example.music_platform.exception.TrackNotFoundException;
+import com.example.music_platform.exception.UserNotFoundException;
 import com.example.music_platform.model.Genre;
 import com.example.music_platform.model.Playlist;
 import com.example.music_platform.model.Track;
@@ -8,7 +10,15 @@ import com.example.music_platform.repository.GenreRepository;
 import com.example.music_platform.repository.PlaylistRepository;
 import com.example.music_platform.repository.TrackRepository;
 import com.example.music_platform.repository.UserRepository;
+import io.github.cdimascio.dotenv.Dotenv;
 import lombok.AllArgsConstructor;
+import org.json.JSONException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -16,13 +26,16 @@ import org.jaudiotagger.audio.AudioHeader;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.util.*;
+import java.util.List;
 
 @AllArgsConstructor
-@Transactional
 @Service
 public class TrackService {
 
@@ -31,12 +44,17 @@ public class TrackService {
     private final GenreRepository genreRepository;
     private final PlaylistRepository playlistRepository;
     private final UserRepository userRepository;
+    private final String ML_URL_UPLOAD = Dotenv.load().get("ML_SERVICE_URL_UPLOAD");
+    private final String ML_URL_DELETE = Dotenv.load().get("ML_SERVICE_URL_DELETE");
+    private final RestTemplate restTemplate = new RestTemplate();
 
+    @Cacheable(value = "track", key = "#trackId")
     public Track getTrack(Long trackId) {
         return trackRepository.findTrackWithGenresById(trackId)
-                .orElseThrow(() -> new RuntimeException("Track not found"));
+                .orElseThrow(() -> new TrackNotFoundException("Track not found"));
     }
 
+    @Cacheable("tracks")
     public List<Track> getTracks() {
         return trackRepository.findAllWithGenres();
     }
@@ -54,8 +72,8 @@ public class TrackService {
             String title = tag.getFirst(FieldKey.TITLE);
 
             Set<Genre> genres = new HashSet<>();
-            if (genreString != null) {
-                String[] genreArray = genreString.split(",");
+            if (genreString != null && !genreString.isEmpty()) {
+                String[] genreArray = genreString.split("[,;]\\s*");
                 for (String genreName : genreArray) {
                     genreName = genreName.trim();
                     Optional<Genre> genreOpt = genreRepository.findByName(genreName);
@@ -65,10 +83,12 @@ public class TrackService {
                 }
             }
 
-            System.out.println("Genre is " + genreString);
-            System.out.println("Artist is " + artist);
-            System.out.println("Album is " + album);
-            System.out.println("Title is " + title);
+            if (genres.isEmpty()) {
+                Optional<Genre> genreOptional = genreRepository.findByName("Unknown");
+                Genre genre = genreOptional.orElseGet(() -> genreRepository.save(new Genre(null, "Unknown", null)));
+                genres.add(genre);
+            }
+
             return new Track(null, title, artist, album, "", "", null, trackLength, genres, null); // Заглушки для остальных параметров;
         } catch (Exception e) {
             e.printStackTrace();
@@ -76,7 +96,16 @@ public class TrackService {
         }
     }
 
+    @CachePut(value = "track", key = "#result.id")
+    @CacheEvict(value = "tracks", allEntries = true)
     public Track uploadTrack(Long userId, MultipartFile file) throws IOException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        if (!"ARTIST".equals(user.getRoles()) && !"ADMIN".equals(user.getRoles())) {
+            throw new RuntimeException("Only verified artists can upload tracks");
+        }
+
         File tempFile = File.createTempFile("tempAudioFile", file.getOriginalFilename());
         file.transferTo(tempFile);
 
@@ -86,58 +115,89 @@ public class TrackService {
         track.setFileSize(file.getSize());
         track.setFileName(file.getOriginalFilename());
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        trackRepository.saveAndFlush(track);
 
-        if (!"ROLE_ARTIST".equals(user.getRoles())) {
-            throw new RuntimeException("Only verified artists can upload tracks");
-        }
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        trackRepository.save(track);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new FileSystemResource(tempFile));
+        body.add("track_id", new HttpEntity<>(track.getId().toString()));
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        assert ML_URL_UPLOAD != null;
+        ResponseEntity<String> response = restTemplate.exchange(
+                ML_URL_UPLOAD,
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
 
         String result = backblazeFileService.uploadFile(file.getOriginalFilename(), tempFile.getAbsolutePath());
 
-        tempFile.delete();
+        if (!tempFile.delete()) {
+            System.err.println("Не удалось удалить временный файл: " + tempFile.getAbsolutePath());
+        }
 
         return track;
-//        return "OK";
     }
 
-    public List<Track> uploadTracks(Long userId, List<MultipartFile> files) throws IOException {
+    public List<Track> uploadTracks(Long userId, List<MultipartFile> files) throws IOException, JSONException {
         List<Track> uploadResults = new ArrayList<>();
 
-        for(MultipartFile file : files) {
+        for (MultipartFile file : files) {
             uploadResults.add(uploadTrack(userId, file));
         }
         return uploadResults;
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "tracks", allEntries = true),
+            @CacheEvict(value = "track", key = "#trackId")
+    })
     @Transactional
     public String deleteTrack(Long trackId) {
-        // Проверяем, существует ли трек в базе данных
         Track track = trackRepository.findById(trackId)
-                .orElseThrow(() -> new RuntimeException("Track not found"));
+                .orElseThrow(() -> new TrackNotFoundException("Track not found"));
 
-        // Удаляем трек из всех связанных плейлистов
-        for (Playlist playlist : track.getPlaylists()) {
+        Iterator<Playlist> iterator = track.getPlaylists().iterator();
+        while (iterator.hasNext()) {
+            Playlist playlist = iterator.next();
+            iterator.remove();
             playlist.getTracks().remove(track);
-            playlistRepository.save(playlist); // Сохраняем изменения для каждого плейлиста
+            playlistRepository.save(playlist);
         }
 
-        // Очистите связь трека с жанрами
-        track.getGenres().clear();
-        trackRepository.save(track); // Сохраняем изменения для трека
 
-        // Удаляем файл из облачного хранилища
+        List<User> usersWithFavourite = userRepository.findAllByFavouritesContains(track);
+        for (User user : usersWithFavourite) {
+            user.getFavourites().remove(track);
+            userRepository.save(user);
+        }
+
+        track.getGenres().clear();
+        trackRepository.save(track);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, String> requestBody = new HashMap<>();
+        requestBody.put("track_id", trackId.toString());
+
+        assert ML_URL_DELETE != null;
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                ML_URL_DELETE,
+                new HttpEntity<>(requestBody, headers),
+                String.class
+        );
+
         String deleteResult = backblazeFileService.deleteFile(track.getFileName());
 
-        // Удаляем сам трек из базы данных
         trackRepository.delete(track);
 
         return deleteResult;
     }
-
-
 
     public void downloadFile(String fileName) throws IOException {
         String downloadPath = "./" + fileName;
@@ -146,40 +206,25 @@ public class TrackService {
     }
 
     public void downloadAndSaveFile(String fileName, String savePath) throws IOException {
-        // Получаем InputStream для файла из BackBlazeFileService
-        InputStream fileStream = backblazeFileService.downloadFileStream(fileName);
-
         String fullSavePath = savePath.endsWith("/") ? savePath + fileName : savePath + "/" + fileName;
-
-        // Создаем выходной файл по указанному пути
         File targetFile = new File(fullSavePath);
-        try (FileOutputStream outStream = new FileOutputStream(targetFile)) {
+
+        try (InputStream fileStream = backblazeFileService.downloadFileStream(fileName);
+             FileOutputStream outStream = new FileOutputStream(targetFile)) {
+
             byte[] buffer = new byte[8192];
             int bytesRead;
-            // Читаем данные из потока и записываем в файл
             while ((bytesRead = fileStream.read(buffer)) != -1) {
                 outStream.write(buffer, 0, bytesRead);
             }
         }
     }
 
-    public InputStream downloadFileStream(String fileName) throws IOException {
+    public InputStream downloadFileStream(String fileName) {
         Optional<Track> track = trackRepository.findByFileName(fileName);
         if (track.isPresent()) {
             return backblazeFileService.downloadFileStream(fileName);
         }
-        throw new FileNotFoundException("Track not found");
+        throw new TrackNotFoundException("Track not found");
     }
-
-//    public String getURLFileStream(String fileName) throws IOException {
-//        Optional<Track> track = trackRepository.findByFileName(fileName);
-//
-//        if (track.isPresent()) {
-//            String streamUrl = "https://yourserver.com/download/" + fileName; // Генерируем URL потока
-//            Map<String, String> response = new HashMap<>();
-//            response.put("streamingUrl", streamUrl);
-//
-//            return ResponseEntity.ok(response);
-//        }
-//    }
 }

@@ -1,0 +1,256 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-users-table
+      author: borovenskyy@gmail.com
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(255)
+              - column:
+                  name: username
+                  type: varchar(255)
+              - column:
+                  name: password
+                  type: varchar(255)
+              - column:
+                  name: role
+                  type: varchar(50)
+              - column:
+                  name: email_verified
+                  type: boolean
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 002-create-verification_token-table
+      author: borovenskyy@gmail.com
+      changes:
+        - createTable:
+            tableName: verification_token
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: token
+                  type: varchar(255)
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    unique: true
+                    references: users(id)
+                    foreignKeyName: fk_token_user
+              - column:
+                  name: expiry_date
+                  type: timestamp
+
+  - changeSet:
+      id: 003-create-tracks-table
+      author: borovenskyy@gmail.com
+      changes:
+        - createTable:
+            tableName: tracks
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: artist
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: album
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_type
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_size
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: duration
+                  type: bigint
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 004-create-genres-table
+      author: borovenskyy@gmail.com
+      changes:
+        - createTable:
+            tableName: genres
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+  - changeSet:
+      id: 005-create-playlists-table
+      author: borovenskyy@gmail.com
+      changes:
+        - createTable:
+            tableName: playlists
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(255)
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: users(id)
+                    foreignKeyName: fk_playlist_user
+
+  - changeSet:
+      id: 006-create-artist_requests-table
+      author: borovenskyy@gmail.com
+      changes:
+        - createTable:
+            tableName: artist_requests
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(50)
+              - column:
+                  name: created_at
+                  type: timestamp
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    unique: true
+                    references: users(id)
+                    foreignKeyName: fk_request_user
+
+  - changeSet:
+      id: 007-create-join-tables
+      author: borovenskyy@gmail.com
+      changes:
+        # user_favourites
+        - createTable:
+            tableName: user_favourites
+            columns:
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: users(id)
+                    foreignKeyName: fk_fav_user
+              - column:
+                  name: track_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: tracks(id)
+                    foreignKeyName: fk_fav_track
+        - addPrimaryKey:
+            tableName: user_favourites
+            columnNames: user_id, track_id
+            constraintName: pk_user_favourites
+
+        # playlist_tracks
+        - createTable:
+            tableName: playlist_tracks
+            columns:
+              - column:
+                  name: playlist_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: playlists(id)
+                    foreignKeyName: fk_pt_playlist
+              - column:
+                  name: track_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: tracks(id)
+                    foreignKeyName: fk_pt_track
+        - addPrimaryKey:
+            tableName: playlist_tracks
+            columnNames: playlist_id, track_id
+            constraintName: pk_playlist_tracks
+
+        # track_genres
+        - createTable:
+            tableName: track_genres
+            columns:
+              - column:
+                  name: track_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: tracks(id)
+                    foreignKeyName: fk_tg_track
+              - column:
+                  name: genre_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: genres(id)
+                    foreignKeyName: fk_tg_genre
+        - addPrimaryKey:
+            tableName: track_genres
+            columnNames: track_id, genre_id
+            constraintName: pk_track_genres

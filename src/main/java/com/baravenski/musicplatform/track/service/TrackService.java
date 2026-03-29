@@ -56,6 +56,7 @@ public class TrackService {
     @Cacheable("tracks")
     public List<TrackResponseDto> getAllTracks() {
         var tracks = trackRepository.findAllWithGenres();
+        log.info("Found {} tracks", tracks.size());
         return trackMapper.toDtoList(tracks);
     }
 
@@ -143,5 +144,12 @@ public class TrackService {
     public List<TrackResponseDto> getFavouritesTracksByUserId(UUID userId) {
         var tracks = trackRepository.findTracksByUserId(userId);
         return trackMapper.toDtoList(tracks);
+    }
+
+    public void fetchGenresForTracks(List<Track> tracks) {
+        if (tracks == null || tracks.isEmpty()) {
+            return;
+        }
+        trackRepository.fetchGenresForTracks(tracks);
     }
 }

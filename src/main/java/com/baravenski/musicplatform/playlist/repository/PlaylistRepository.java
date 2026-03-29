@@ -14,21 +14,13 @@ public interface PlaylistRepository extends JpaRepository<Playlist, UUID> {
     @Query("SELECT DISTINCT p FROM Playlist p LEFT JOIN FETCH p.tracks WHERE p.id = :playlistId")
     Optional<Playlist> findPlaylistWithTracksById(@Param("playlistId") UUID id);
 
-    @Query("SELECT DISTINCT p FROM Playlist p " +
-            "LEFT JOIN FETCH p.tracks t " +
-            "LEFT JOIN FETCH t.genres " +
-            "WHERE p.id = :playlistId")
-    Optional<Playlist> findPlaylistWithTracksAndGenresById(@Param("playlistId") UUID id);
-
-    @Query("SELECT DISTINCT p FROM Playlist p " +
-            "LEFT JOIN FETCH p.tracks t " +
-            "LEFT JOIN FETCH t.genres ")
-    List<Playlist> findAllWithTracksAndGenres();
-
     @Query("""
                     SELECT playlists FROM User user
                     JOIN user.playlists playlists
                     WHERE user.id = :userId
             """)
     List<Playlist> findPlaylistsByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT DISTINCT p FROM Playlist p LEFT JOIN FETCH p.tracks")
+    List<Playlist> findAllWithTracks();
 }

@@ -47,7 +47,7 @@ public class AuthService {
     public AuthResponse register(AuthRegister authRegister) {
         var user = userService.saveUserByRegistration(authRegister);
         var token = verificationTokenService.createVerificationToken(user);
-        log.info("Confirmation token for {} creation: {}", authRegister.getUsername(), token);
+        log.info("Confirmation token for {} creation: {}", authRegister.getUsername(), token.getToken());
         emailService.sendVerificationEmail(user, token.getToken());
 
         var authentication = authenticationManager.authenticate(

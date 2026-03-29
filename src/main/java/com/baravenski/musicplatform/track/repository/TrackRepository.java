@@ -44,7 +44,11 @@ public interface TrackRepository extends JpaRepository<Track, UUID> {
     @Query("""
                     SELECT tracks FROM User user
                     JOIN user.favourites tracks
+                    LEFT JOIN FETCH tracks.genres
                     WHERE user.id = :userId
             """)
     List<Track> findTracksByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT DISTINCT t FROM Track t LEFT JOIN FETCH t.genres WHERE t IN :tracks")
+    List<Track> fetchGenresForTracks(@Param("tracks") List<Track> tracks);
 }

@@ -58,7 +58,7 @@ public class AuthController {
     }
 
     @ResponseStatus(OK)
-    @GetMapping("/confirm/{userId}")
+    @PostMapping("/confirm/{userId}")
     public void confirmEmail(
             @PathVariable UUID userId,
             @RequestBody AuthConfirmation authConfirmation

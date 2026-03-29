@@ -7,6 +7,7 @@ import com.baravenski.musicplatform.playlist.dto.PlaylistWithTracksResponseDto;
 import com.baravenski.musicplatform.playlist.dto.mapper.PlaylistMapper;
 import com.baravenski.musicplatform.playlist.repository.PlaylistRepository;
 import com.baravenski.musicplatform.track.service.TrackService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -33,23 +34,26 @@ public class PlaylistService {
         return playlistMapper.toDto(playlistSaved);
     }
 
+    @Transactional
     @CacheEvict(value = "playlists", allEntries = true)
     public PlaylistWithTracksResponseDto addTrackToPlaylist(UUID id, UUID trackId) {
-        var playlist = playlistRepository.findPlaylistWithTracksAndGenresById(id)
+        var playlist = playlistRepository.findPlaylistWithTracksById(id)
                 .orElseThrow(() -> new PlaylistNotFoundException(id));
         var track = trackService.findTrackById(trackId);
 
         playlist.getTracks().add(track);
         playlist = playlistRepository.save(playlist);
+        trackService.fetchGenresForTracks(playlist.getTracks());
         return playlistMapper.toDtoWithTracks(playlist);
     }
 
+    @Transactional
     @Caching(evict = {
             @CacheEvict(value = "playlists", allEntries = true),
             @CacheEvict(value = "playlist", key = "#id")
     })
     public PlaylistWithTracksResponseDto removeTrackFromPlaylist(UUID id, UUID trackId) {
-        var playlist = playlistRepository.findPlaylistWithTracksAndGenresById(id)
+        var playlist = playlistRepository.findPlaylistWithTracksById(id)
                 .orElseThrow(() -> new PlaylistNotFoundException(id));
         var track = trackService.findTrackById(trackId);
 
@@ -57,19 +61,28 @@ public class PlaylistService {
             playlist.getTracks().remove(track);
             playlist = playlistRepository.save(playlist);
         }
+        trackService.fetchGenresForTracks(playlist.getTracks());
         return playlistMapper.toDtoWithTracks(playlist);
     }
 
+    @Transactional
     @Cacheable(value = "playlist", key = "#id")
     public PlaylistWithTracksResponseDto getPlaylistWithTracks(UUID id) {
-        var playlist = playlistRepository.findPlaylistWithTracksAndGenresById(id)
+        var playlist = playlistRepository.findPlaylistWithTracksById(id)
                 .orElseThrow(() -> new PlaylistNotFoundException(id));
+        trackService.fetchGenresForTracks(playlist.getTracks());
         return playlistMapper.toDtoWithTracks(playlist);
     }
 
+    @Transactional
     @Cacheable("playlists")
     public List<PlaylistWithTracksResponseDto> getPlaylists() {
-        var playlists = playlistRepository.findAllWithTracksAndGenres();
+        var playlists = playlistRepository.findAllWithTracks();
+        var allTracks = playlists.stream()
+                .flatMap(p -> p.getTracks().stream())
+                .distinct()
+                .toList();
+        trackService.fetchGenresForTracks(allTracks);
         return playlistMapper.toDtoListWithTracks(playlists);
     }
 

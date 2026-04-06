@@ -1,5 +1,6 @@
 package com.baravenski.musicplatform.track.service;
 
+import com.baravenski.musicplatform.artist.service.ArtistService;
 import com.baravenski.musicplatform.exception.impl.TrackNotFoundException;
 import com.baravenski.musicplatform.exception.impl.UploadTrackParsingException;
 import com.baravenski.musicplatform.exception.impl.UploadTrackToTheMlOrAwsServiceException;

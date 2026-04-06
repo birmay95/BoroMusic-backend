@@ -4,12 +4,12 @@ import com.baravenski.musicplatform.auth.dto.AuthConfirmation;
 import com.baravenski.musicplatform.auth.dto.AuthRegister;
 import com.baravenski.musicplatform.auth.dto.AuthRequest;
 import com.baravenski.musicplatform.auth.dto.AuthResponse;
+import com.baravenski.musicplatform.auth.dto.TokenRefreshRequest;
 import com.baravenski.musicplatform.auth.service.AuthService;
 import com.baravenski.musicplatform.user.service.UserService;
-import com.baravenski.musicplatform.verificationtoken.service.VerificationTokenService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -37,12 +37,17 @@ public class AuthController {
         return authService.register(authRegister);
     }
 
-    // TODO check this method later
+    @ResponseStatus(OK)
+    @PostMapping("/refresh")
+    public AuthResponse refreshtoken(@RequestBody TokenRefreshRequest request) {
+        return authService.refreshToken(request);
+    }
+
     @ResponseStatus(OK)
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        return ResponseEntity.ok(authService.invalidateToken(token));
+    public void logout() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        authService.logout(username);
     }
 
     @ResponseStatus(OK)

@@ -1,5 +1,7 @@
 package com.baravenski.musicplatform.user.model;
 
+import com.baravenski.musicplatform.artist.model.Artist;
+import com.baravenski.musicplatform.auth.model.RefreshToken;
 import com.baravenski.musicplatform.core.security.enums.UserRoles;
 import com.baravenski.musicplatform.playlist.model.Playlist;
 import com.baravenski.musicplatform.verificationtoken.model.VerificationToken;
@@ -33,6 +35,12 @@ public class User {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private VerificationToken verificationToken;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private RefreshToken refreshToken;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Artist artist;
 
     @ManyToMany
     @JoinTable(

@@ -3,6 +3,8 @@ package com.baravenski.musicplatform.auth.service;
 import com.baravenski.musicplatform.auth.dto.AuthRegister;
 import com.baravenski.musicplatform.auth.dto.AuthRequest;
 import com.baravenski.musicplatform.auth.dto.AuthResponse;
+import com.baravenski.musicplatform.auth.dto.TokenRefreshRequest;
+import com.baravenski.musicplatform.auth.model.RefreshToken;
 import com.baravenski.musicplatform.core.email.service.EmailService;
 import com.baravenski.musicplatform.exception.impl.IncorrectPasswordException;
 import com.baravenski.musicplatform.exception.TokenNotFoundException;
@@ -31,6 +33,7 @@ public class AuthService {
     private final VerificationTokenService verificationTokenService;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthResponse authorize(AuthRequest authRequest) {
         var user = userService.findUserByEmailOrUsername(authRequest.getUsername());
@@ -41,7 +44,10 @@ public class AuthService {
         var authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUsername(), authRequest.getPassword())
         );
-        return new AuthResponse(JwtUtil.generateToken(authentication), userMapper.toDto(user));
+        String accessToken = JwtUtil.generateToken(authentication);
+        RefreshToken refreshToken = refreshTokenService.createOrUpdateRefreshToken(user.getId());
+
+        return new AuthResponse(accessToken, refreshToken.getToken(), userMapper.toDto(user));
     }
 
     public AuthResponse register(AuthRegister authRegister) {
@@ -53,8 +59,28 @@ public class AuthService {
         var authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(authRegister.getUsername(), authRegister.getPassword())
         );
-        var jwt = JwtUtil.generateToken(authentication);
-        return new AuthResponse(jwt, userMapper.toDto(user));
+
+        String accessToken = JwtUtil.generateToken(authentication);
+        RefreshToken refreshToken = refreshTokenService.createOrUpdateRefreshToken(user.getId());
+        return new AuthResponse(accessToken, refreshToken.getToken(), userMapper.toDto(user));
+    }
+
+    public AuthResponse refreshToken(TokenRefreshRequest request) {
+        String requestRefreshToken = request.getRefreshToken();
+
+        return refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    String accessToken = JwtUtil.generateTokenFromUsername(user.getUsername());
+                    return new AuthResponse(accessToken, requestRefreshToken, userMapper.toDto(user));
+                })
+                .orElseThrow(() -> new TokenNotFoundException("Refresh token is not in database!"));
+    }
+
+    public void logout(String username) {
+        var user = userService.findUserByEmailOrUsername(username);
+        refreshTokenService.deleteByUserId(user.getId());
     }
 
     public void verify(UUID userId) {
@@ -70,15 +96,4 @@ public class AuthService {
         var user = userService.findUserById(userId);
         return user.isEmailVerified();
     }
-
-    public String invalidateToken(String token) {
-        if (token != null && !token.isEmpty()) {
-            return "Exit completed successfully";
-        } else {
-            throw new TokenNotFoundException("Invalid token or the exit has already been completed");
-        }
-    }
-
 }
-
-

@@ -58,7 +58,60 @@ databaseChangeLog:
                   type: timestamp
 
   - changeSet:
-      id: 003-create-tracks-table
+      id: 003-create-artists-table
+      author: borovenskyy@gmail.com
+      changes:
+        - createTable:
+            tableName: artists
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    unique: true # Добавлена уникальность для OneToOne
+                    references: users(id)
+                    foreignKeyName: fk_artist_user
+
+  - changeSet:
+      id: 004-create-albums-table
+      author: borovenskyy@gmail.com
+      changes:
+        - createTable:
+            tableName: albums
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(255)
+              - column:
+                  name: release_date
+                  type: timestamp
+              - column:
+                  name: artist_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: artists(id)
+                    foreignKeyName: fk_album_artist
+
+  - changeSet:
+      id: 005-create-tracks-table
       author: borovenskyy@gmail.com
       changes:
         - createTable:
@@ -72,16 +125,6 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: title
-                  type: varchar(255)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: artist
-                  type: varchar(255)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: album
                   type: varchar(255)
                   constraints:
                     nullable: false
@@ -105,9 +148,23 @@ databaseChangeLog:
                   type: bigint
                   constraints:
                     nullable: false
+              - column:
+                  name: artist_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: artists(id)
+                    foreignKeyName: fk_track_artist
+              - column:
+                  name: album_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: albums(id)
+                    foreignKeyName: fk_track_album
 
   - changeSet:
-      id: 004-create-genres-table
+      id: 006-create-genres-table
       author: borovenskyy@gmail.com
       changes:
         - createTable:
@@ -127,7 +184,7 @@ databaseChangeLog:
                     unique: true
 
   - changeSet:
-      id: 005-create-playlists-table
+      id: 007-create-playlists-table
       author: borovenskyy@gmail.com
       changes:
         - createTable:
@@ -146,7 +203,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: description
-                  type: varchar(255)
+                  type: text
               - column:
                   name: user_id
                   type: uuid
@@ -156,7 +213,7 @@ databaseChangeLog:
                     foreignKeyName: fk_playlist_user
 
   - changeSet:
-      id: 006-create-artist_requests-table
+      id: 008-create-artist_requests-table
       author: borovenskyy@gmail.com
       changes:
         - createTable:
@@ -172,18 +229,30 @@ databaseChangeLog:
                   name: status
                   type: varchar(50)
               - column:
+                  name: requested_name
+                  type: varchar(255)
+              - column:
+                  name: admin_comment
+                  type: text
+              - column:
                   name: created_at
                   type: timestamp
+              - column:
+                  name: target_artist_id
+                  type: uuid
+                  constraints:
+                    references: artists(id)
+                    foreignKeyName: fk_request_target_artist
               - column:
                   name: user_id
                   type: uuid
                   constraints:
-                    unique: true
+                    nullable: false # unique: true УДАЛЕНО для поддержки ManyToOne
                     references: users(id)
                     foreignKeyName: fk_request_user
 
   - changeSet:
-      id: 007-create-join-tables
+      id: 009-create-join-tables
       author: borovenskyy@gmail.com
       changes:
         # user_favourites

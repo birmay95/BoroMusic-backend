@@ -1,15 +1,19 @@
 package com.baravenski.musicplatform.track.model;
 
+import com.baravenski.musicplatform.album.model.Album;
+import com.baravenski.musicplatform.artist.model.Artist;
 import com.baravenski.musicplatform.genre.model.Genre;
 import com.baravenski.musicplatform.playlist.model.Playlist;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -38,11 +42,6 @@ public class Track {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
-    private String artist;
-
-    @Column(nullable = false)
-    private String album;
 
     @Column(nullable = false)
     private String fileName;
@@ -55,6 +54,14 @@ public class Track {
 
     @Column(nullable = false)
     private Long duration;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "artist_id", nullable = false)
+    private Artist artist;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "album_id", nullable = false)
+    private Album album;
 
     @ManyToMany
     @JoinTable(

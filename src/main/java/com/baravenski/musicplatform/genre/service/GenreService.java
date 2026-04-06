@@ -1,6 +1,6 @@
 package com.baravenski.musicplatform.genre.service;
 
-import com.baravenski.musicplatform.genre.dto.mapper.GenreMapper;
+import com.baravenski.musicplatform.genre.mapper.GenreMapper;
 import com.baravenski.musicplatform.genre.model.Genre;
 import com.baravenski.musicplatform.genre.repository.GenreRepository;
 import jakarta.transaction.Transactional;

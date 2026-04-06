@@ -1,4 +1,4 @@
-package com.baravenski.musicplatform.genre.dto.mapper;
+package com.baravenski.musicplatform.genre.mapper;
 
 import com.baravenski.musicplatform.genre.model.Genre;
 import org.jspecify.annotations.NullMarked;

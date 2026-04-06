@@ -40,7 +40,7 @@ public class DataInitializer implements CommandLineRunner {
         if (userRepository.findByEmail(adminEmail).isEmpty()) {
             String password = passwordEncoder.encode(adminPassword);
 
-            User user = new User(null, adminEmail, adminUsername, password, UserRoles.valueOf(adminRole), true, null, new ArrayList<>(), new ArrayList<>());
+            User user = new User(null, adminEmail, adminUsername, password, UserRoles.valueOf(adminRole), true, null, null, new ArrayList<>(), new ArrayList<>());
             userRepository.save(user);
 
             log.info("User '{}' added to the database", adminUsername);

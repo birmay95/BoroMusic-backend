@@ -1,5 +1,7 @@
 package com.baravenski.musicplatform.track.service;
 
+import com.baravenski.musicplatform.album.service.AlbumService;
+import com.baravenski.musicplatform.artist.service.ArtistService;
 import com.baravenski.musicplatform.exception.impl.UploadTrackToTheMlOrAwsServiceException;
 import com.baravenski.musicplatform.genre.service.GenreService;
 import com.baravenski.musicplatform.genre.model.Genre;
@@ -23,6 +25,8 @@ import java.util.Objects;
 public class TrackParser {
 
     private final GenreService genreService;
+    private final ArtistService artistService;
+    private final AlbumService albumService;
 
     public Track parseTrack(File file, MultipartFile multipartFile) {
         var audioFile = Try.of(() -> AudioFileIO.read(file))
@@ -32,8 +36,10 @@ public class TrackParser {
         var tag = audioFile.getTag();
 
         var genreString = tag.getFirst(FieldKey.GENRE);
-        var artist = tag.getFirst(FieldKey.ARTIST);
-        var album = tag.getFirst(FieldKey.ALBUM);
+        var artistString = tag.getFirst(FieldKey.ARTIST);
+        var artist = artistService.getOrCreateArtist(artistString);
+        var albumString = tag.getFirst(FieldKey.ALBUM);
+        var album = albumService.getOrCreateAlbum(albumString);
         var title = tag.getFirst(FieldKey.TITLE);
 
         List<Genre> genres = new ArrayList<>();
@@ -48,12 +54,12 @@ public class TrackParser {
         return new Track(
                 null,
                 title,
-                artist,
-                album,
                 Objects.requireNonNull(multipartFile.getOriginalFilename()),
                 Objects.requireNonNull(multipartFile.getContentType()),
                 multipartFile.getSize(),
                 trackLength,
+                artist,
+                album,
                 genres,
                 new ArrayList<>()
         );

@@ -1,6 +1,7 @@
 package com.baravenski.musicplatform.album.model;
 
 import com.baravenski.musicplatform.artist.model.Artist;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
@@ -37,7 +38,8 @@ public class Album {
     private String title;
 
     @CreatedDate
-    private LocalDateTime releaseDate;
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "artist_id", nullable = false)

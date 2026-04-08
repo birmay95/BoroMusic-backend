@@ -3,10 +3,8 @@ package com.baravenski.musicplatform.artistrequest.controller;
 import com.baravenski.musicplatform.artistrequest.dto.ArtistRequestCreateDto;
 import com.baravenski.musicplatform.artistrequest.dto.ArtistRequestResponseDto;
 import com.baravenski.musicplatform.artistrequest.enums.ArtistRequestStatus;
-import com.baravenski.musicplatform.artistrequest.model.ArtistRequest;
 import com.baravenski.musicplatform.artistrequest.service.ArtistRequestService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,7 +13,7 @@ import java.util.UUID;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
-@RequestMapping("/artists")
+@RequestMapping("api/v1/artists")
 @RequiredArgsConstructor
 public class ArtistRequestController {
 

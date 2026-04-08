@@ -1,5 +1,12 @@
 databaseChangeLog:
   - changeSet:
+      id: 000-setup-extensions
+      author: borovenskyy@gmail.com
+      changes:
+        - sql:
+            sql: CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+  - changeSet:
       id: 001-create-users-table
       author: borovenskyy@gmail.com
       changes:
@@ -15,9 +22,13 @@ databaseChangeLog:
               - column:
                   name: email
                   type: varchar(255)
+                  constraints:
+                    unique: true
               - column:
                   name: username
                   type: varchar(255)
+                  constraints:
+                    unique: true
               - column:
                   name: password
                   type: varchar(255)
@@ -29,6 +40,9 @@ databaseChangeLog:
                   type: boolean
                   constraints:
                     nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
 
   - changeSet:
       id: 002-create-verification_token-table
@@ -73,13 +87,11 @@ databaseChangeLog:
               - column:
                   name: name
                   type: varchar(255)
-                  constraints:
-                    unique: true
               - column:
                   name: user_id
                   type: uuid
                   constraints:
-                    unique: true # Добавлена уникальность для OneToOne
+                    unique: true
                     references: users(id)
                     foreignKeyName: fk_artist_user
 
@@ -100,15 +112,15 @@ databaseChangeLog:
                   name: title
                   type: varchar(255)
               - column:
-                  name: release_date
-                  type: timestamp
-              - column:
                   name: artist_id
                   type: uuid
                   constraints:
                     nullable: false
                     references: artists(id)
                     foreignKeyName: fk_album_artist
+              - column:
+                  name: created_at
+                  type: timestamp
 
   - changeSet:
       id: 005-create-tracks-table
@@ -128,6 +140,20 @@ databaseChangeLog:
                   type: varchar(255)
                   constraints:
                     nullable: false
+              - column:
+                  name: artist_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: artists(id)
+                    foreignKeyName: fk_track_artist
+              - column:
+                  name: album_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: albums(id)
+                    foreignKeyName: fk_track_album
               - column:
                   name: file_name
                   type: varchar(255)
@@ -149,19 +175,14 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: artist_id
-                  type: uuid
-                  constraints:
-                    nullable: false
-                    references: artists(id)
-                    foreignKeyName: fk_track_artist
+                  name: created_at
+                  type: timestamp
               - column:
-                  name: album_id
+                  name: uploaded_by
                   type: uuid
                   constraints:
-                    nullable: false
-                    references: albums(id)
-                    foreignKeyName: fk_track_album
+                    references: users(id)
+                    foreignKeyName: fk_track_uploaded_by
 
   - changeSet:
       id: 006-create-genres-table
@@ -211,6 +232,9 @@ databaseChangeLog:
                     nullable: false
                     references: users(id)
                     foreignKeyName: fk_playlist_user
+              - column:
+                  name: created_at
+                  type: timestamp
 
   - changeSet:
       id: 008-create-artist_requests-table
@@ -247,15 +271,47 @@ databaseChangeLog:
                   name: user_id
                   type: uuid
                   constraints:
-                    nullable: false # unique: true УДАЛЕНО для поддержки ManyToOne
+                    nullable: false
                     references: users(id)
                     foreignKeyName: fk_request_user
 
   - changeSet:
-      id: 009-create-join-tables
+      id: 009-create-refresh_token-table
       author: borovenskyy@gmail.com
       changes:
-        # user_favourites
+        - createTable:
+            tableName: refresh_token
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: token
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+                    references: users(id)
+                    foreignKeyName: fk_refresh_token_user
+              - column:
+                  name: expiry_date
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 010-create-join-tables
+      author: borovenskyy@gmail.com
+      changes:
         - createTable:
             tableName: user_favourites
             columns:
@@ -273,12 +329,15 @@ databaseChangeLog:
                     nullable: false
                     references: tracks(id)
                     foreignKeyName: fk_fav_track
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
         - addPrimaryKey:
             tableName: user_favourites
             columnNames: user_id, track_id
             constraintName: pk_user_favourites
 
-        # playlist_tracks
         - createTable:
             tableName: playlist_tracks
             columns:
@@ -301,7 +360,6 @@ databaseChangeLog:
             columnNames: playlist_id, track_id
             constraintName: pk_playlist_tracks
 
-        # track_genres
         - createTable:
             tableName: track_genres
             columns:
@@ -323,3 +381,91 @@ databaseChangeLog:
             tableName: track_genres
             columnNames: track_id, genre_id
             constraintName: pk_track_genres
+
+  - changeSet:
+      id: 011-create-btree-indexes
+      author: borovenskyy@gmail.com
+      changes:
+        - createIndex: { indexName: idx_users_created_at, tableName: users, columns: [{ column: { name: created_at } }] }
+
+        - createIndex: { indexName: idx_tracks_created_at, tableName: tracks, columns: [{ column: { name: created_at } }] }
+        - createIndex: { indexName: idx_tracks_artist_id, tableName: tracks, columns: [{ column: { name: artist_id } }] }
+        - createIndex: { indexName: idx_tracks_album_id, tableName: tracks, columns: [{ column: { name: album_id } }] }
+        - createIndex: { indexName: idx_tracks_uploaded_by, tableName: tracks, columns: [{ column: { name: uploaded_by } }] }
+
+        - createIndex: { indexName: idx_albums_created_at, tableName: albums, columns: [{ column: { name: created_at } }] }
+        - createIndex: { indexName: idx_albums_artist_id, tableName: albums, columns: [{ column: { name: artist_id } }] }
+
+        - createIndex: { indexName: idx_playlists_created_at, tableName: playlists, columns: [{ column: { name: created_at } }] }
+        - createIndex: { indexName: idx_playlists_user_id, tableName: playlists, columns: [{ column: { name: user_id } }] }
+
+        - createIndex: { indexName: idx_requests_status, tableName: artist_requests, columns: [{ column: { name: status } }] }
+        - createIndex: { indexName: idx_requests_created_at, tableName: artist_requests, columns: [{ column: { name: created_at } }] }
+        - createIndex: { indexName: idx_requests_user_id, tableName: artist_requests, columns: [{ column: { name: user_id } }] }
+        - createIndex: { indexName: idx_requests_target_artist, tableName: artist_requests, columns: [{ column: { name: target_artist_id } }] }
+
+        - createIndex: { indexName: idx_verif_token_expiry, tableName: verification_token, columns: [{ column: { name: expiry_date } }] }
+        - createIndex: { indexName: idx_refresh_token_expiry, tableName: refresh_token, columns: [{ column: { name: expiry_date } }] }
+
+        - createIndex: { indexName: idx_user_fav_track_id, tableName: user_favourites, columns: [{ column: { name: track_id } }] }
+        - createIndex: { indexName: idx_user_fav_created_at, tableName: user_favourites, columns: [{ column: { name: created_at } }] }
+        - createIndex: { indexName: idx_pt_track_id, tableName: playlist_tracks, columns: [{ column: { name: track_id } }] }
+        - createIndex: { indexName: idx_tg_genre_id, tableName: track_genres, columns: [{ column: { name: genre_id } }] }
+
+  - changeSet:
+      id: 012-create-gin-indexes
+      author: borovenskyy@gmail.com
+      changes:
+        - sql:
+            sql: CREATE INDEX idx_tracks_title_gin ON tracks USING GIN (title gin_trgm_ops);
+        - sql:
+            sql: CREATE INDEX idx_artists_name_gin ON artists USING GIN (name gin_trgm_ops);
+        - sql:
+            sql: CREATE INDEX idx_albums_title_gin ON albums USING GIN (title gin_trgm_ops);
+        - sql:
+            sql: CREATE INDEX idx_playlists_name_gin ON playlists USING GIN (name gin_trgm_ops);
+
+  - changeSet:
+      id: 013-setup-pgvector-extension
+      author: borovenskyy@gmail.com
+      changes:
+        - sql:
+            sql: CREATE EXTENSION IF NOT EXISTS vector;
+
+  - changeSet:
+      id: 014-create-feature_vectors-table
+      author: borovenskyy@gmail.com
+      changes:
+        - createTable:
+            tableName: feature_vectors
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: track_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+                    references: tracks(id)
+                    foreignKeyName: fk_feature_vector_track
+              - column:
+                  name: mood_vector
+                  type: vector(2)
+
+  - changeSet:
+      id: 015-create-feature_vectors-indexes
+      author: borovenskyy@gmail.com
+      changes:
+        - createIndex:
+            indexName: idx_feature_vectors_track_id
+            tableName: feature_vectors
+            columns:
+              - column: { name: track_id }
+
+        - sql:
+            sql: CREATE INDEX idx_mood_vector_hnsw ON feature_vectors USING hnsw (mood_vector vector_l2_ops);

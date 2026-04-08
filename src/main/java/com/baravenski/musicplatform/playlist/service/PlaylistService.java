@@ -1,10 +1,12 @@
 package com.baravenski.musicplatform.playlist.service;
 
+import com.baravenski.musicplatform.core.pagination.PageResponseDto;
 import com.baravenski.musicplatform.exception.impl.PlaylistNotFoundException;
 import com.baravenski.musicplatform.playlist.dto.PlaylistRequestDto;
 import com.baravenski.musicplatform.playlist.dto.PlaylistResponseDto;
 import com.baravenski.musicplatform.playlist.dto.PlaylistWithTracksResponseDto;
 import com.baravenski.musicplatform.playlist.dto.mapper.PlaylistMapper;
+import com.baravenski.musicplatform.playlist.model.Playlist;
 import com.baravenski.musicplatform.playlist.repository.PlaylistRepository;
 import com.baravenski.musicplatform.track.service.TrackService;
 import jakarta.transaction.Transactional;
@@ -13,6 +15,10 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,7 +33,7 @@ public class PlaylistService {
     private final TrackService trackService;
 
     @CachePut(value = "playlist", key = "#result.id")
-    @CacheEvict(value = "playlists", allEntries = true)
+    @CacheEvict(value = "playlists_page", allEntries = true)
     public PlaylistResponseDto createPlaylist(PlaylistRequestDto playlistRequestDto) {
         var playlistToSave = playlistMapper.toEntity(playlistRequestDto);
         var playlistSaved = playlistRepository.save(playlistToSave);
@@ -35,7 +41,7 @@ public class PlaylistService {
     }
 
     @Transactional
-    @CacheEvict(value = "playlists", allEntries = true)
+    @CacheEvict(value = "playlists_page", allEntries = true)
     public PlaylistWithTracksResponseDto addTrackToPlaylist(UUID id, UUID trackId) {
         var playlist = playlistRepository.findPlaylistWithTracksById(id)
                 .orElseThrow(() -> new PlaylistNotFoundException(id));
@@ -49,7 +55,7 @@ public class PlaylistService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "playlists", allEntries = true),
+            @CacheEvict(value = "playlists_page", allEntries = true),
             @CacheEvict(value = "playlist", key = "#id")
     })
     public PlaylistWithTracksResponseDto removeTrackFromPlaylist(UUID id, UUID trackId) {
@@ -75,19 +81,25 @@ public class PlaylistService {
     }
 
     @Transactional
-    @Cacheable("playlists")
-    public List<PlaylistWithTracksResponseDto> getPlaylists() {
-        var playlists = playlistRepository.findAllWithTracks();
-        var allTracks = playlists.stream()
-                .flatMap(p -> p.getTracks().stream())
-                .distinct()
-                .toList();
-        trackService.fetchGenresForTracks(allTracks);
-        return playlistMapper.toDtoListWithTracks(playlists);
+    @Cacheable(value = "playlists_page", key = "#page")
+    public PageResponseDto<PlaylistWithTracksResponseDto> getPlaylists(int page) {
+        Pageable pageable = PageRequest.of(page, 20, Sort.by("id"));
+        Page<Playlist> playlistPage = playlistRepository.findAllPlaylists(pageable);
+        if (playlistPage.hasContent()) {
+            playlistRepository.fetchTracksForPlaylists(playlistPage.getContent());
+
+            var allTracks = playlistPage.getContent().stream()
+                    .flatMap(p -> p.getTracks().stream())
+                    .distinct()
+                    .toList();
+            trackService.fetchGenresForTracks(allTracks);
+        }
+        var dtoPage = playlistPage.map(playlistMapper::toDtoWithTracks);
+        return new PageResponseDto<>(dtoPage);
     }
 
     @Caching(evict = {
-            @CacheEvict(value = "playlists", allEntries = true),
+            @CacheEvict(value = "playlists_page", allEntries = true),
             @CacheEvict(value = "playlist", key = "#id")
     })
     public void deletePlaylist(UUID id) {

@@ -29,10 +29,10 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login").permitAll()
-                        .requestMatchers("/auth/register").permitAll()
-                        .requestMatchers("/auth/logout").permitAll()
-                        .requestMatchers("tracks/download/{fileName}").permitAll()
+                        .requestMatchers("/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/auth/register").permitAll()
+                        .requestMatchers("/api/v1/auth/logout/{userId}").permitAll()
+//                        .requestMatchers("/api/v1/tracks/download/{fileName}").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

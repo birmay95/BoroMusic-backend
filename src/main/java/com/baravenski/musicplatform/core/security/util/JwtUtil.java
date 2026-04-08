@@ -40,16 +40,16 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String extractUsername(String token) {
+    public static String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    public static  <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token) {
+    private static Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(SECRET_KEY)
                 .build()
@@ -57,16 +57,26 @@ public class JwtUtil {
                 .getBody();
     }
 
-    public boolean isTokenExpired(String token) {
+    public static boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    public Date extractExpiration(String token) {
+    public static Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    public boolean validateToken(String token, String username) {
+    public static boolean validateToken(String token, String username) {
         final String extractedUsername = extractUsername(token);
         return (extractedUsername.equals(username) && !isTokenExpired(token));
+    }
+
+    public static long getExpirationTimeLeft(String token) {
+        try {
+            Date expiration = extractExpiration(token);
+            long timeLeft = expiration.getTime() - System.currentTimeMillis();
+            return Math.max(0, timeLeft);
+        } catch (Exception e) {
+            return 0;
+        }
     }
 }

@@ -36,7 +36,10 @@ public class ControllerAdvice {
     @ExceptionHandler({
             IncorrectPasswordException.class,
             WeakPasswordException.class,
-            IncorrectVerificationTokenException.class
+            IncorrectVerificationTokenException.class,
+            BadCredentialsException.class,
+            BruteForceLockException.class,
+            InvalidTokenException.class,
     })
     public ResponseEntity<ExceptionMessageDto> handleBadRequestException(
             final Exception exception,

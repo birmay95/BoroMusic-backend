@@ -23,4 +23,8 @@ public final class ExceptionConstants {
     public static final String WEAK_PASSWORD = "The password must contain at least 6 characters";
     public static final String USER_WITH_NAME_ALREADY_EXISTS = "A user already exists with name: %s";
     public static final String USER_WITH_EMAIL_ALREADY_EXISTS = "A user already exists with login: %s";
+    public static final String BRUTE_FORCE_LOCK = "Brute Force Lock for time: %d";
+    public static final String INVALID_TOKEN_MESSAGE = "Invalid or expired token";
+    public static final String BAD_CREDENTIALS = "Bad credentials: %s";
+    public static final String ACCESS_DENIED = "Access denied to this track, you aren't owner";
 }

@@ -39,7 +39,7 @@ public class TrackParser {
         var artistString = tag.getFirst(FieldKey.ARTIST);
         var artist = artistService.getOrCreateArtist(artistString);
         var albumString = tag.getFirst(FieldKey.ALBUM);
-        var album = albumService.getOrCreateAlbum(albumString);
+        var album = albumService.getOrCreateAlbum(albumString, artist);
         var title = tag.getFirst(FieldKey.TITLE);
 
         List<Genre> genres = new ArrayList<>();
@@ -51,17 +51,15 @@ public class TrackParser {
             }
         }
 
-        return new Track(
-                null,
-                title,
-                Objects.requireNonNull(multipartFile.getOriginalFilename()),
-                Objects.requireNonNull(multipartFile.getContentType()),
-                multipartFile.getSize(),
-                trackLength,
-                artist,
-                album,
-                genres,
-                new ArrayList<>()
-        );
+        return Track.builder()
+                .title(title)
+                .fileName(Objects.requireNonNull(multipartFile.getOriginalFilename()))
+                .contentType(Objects.requireNonNull(multipartFile.getContentType()))
+                .fileSize(multipartFile.getSize())
+                .duration(trackLength)
+                .artist(artist)
+                .album(album)
+                .genres(genres)
+                .build();
     }
 }

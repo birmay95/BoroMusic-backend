@@ -1,14 +1,13 @@
 package com.baravenski.musicplatform.playlist.controller;
 
+import com.baravenski.musicplatform.core.pagination.PageResponseDto;
 import com.baravenski.musicplatform.playlist.dto.PlaylistRequestDto;
 import com.baravenski.musicplatform.playlist.dto.PlaylistResponseDto;
 import com.baravenski.musicplatform.playlist.dto.PlaylistWithTracksResponseDto;
-import com.baravenski.musicplatform.playlist.model.Playlist;
 import com.baravenski.musicplatform.track.dto.TrackResponseDto;
 import com.baravenski.musicplatform.playlist.service.PlaylistService;
 import com.baravenski.musicplatform.track.service.TrackService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +17,7 @@ import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
-@RequestMapping("/playlists")
+@RequestMapping("api/v1/playlists")
 @RequiredArgsConstructor
 public class PlaylistController {
 
@@ -57,8 +56,8 @@ public class PlaylistController {
 
     @GetMapping
     @ResponseStatus(OK)
-    public List<PlaylistWithTracksResponseDto> getPlaylists() {
-        return playlistService.getPlaylists();
+    public PageResponseDto<PlaylistWithTracksResponseDto> getPlaylists(@RequestParam(defaultValue = "0") int page) {
+        return playlistService.getPlaylists(page);
     }
 
     @DeleteMapping("/{id}")

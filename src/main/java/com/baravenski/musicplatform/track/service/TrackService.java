@@ -1,6 +1,8 @@
 package com.baravenski.musicplatform.track.service;
 
-import com.baravenski.musicplatform.artist.service.ArtistService;
+import com.baravenski.musicplatform.core.pagination.PageResponseDto;
+import com.baravenski.musicplatform.core.security.enums.UserRoles;
+import com.baravenski.musicplatform.exception.impl.AccessDeniedException;
 import com.baravenski.musicplatform.exception.impl.TrackNotFoundException;
 import com.baravenski.musicplatform.exception.impl.UploadTrackParsingException;
 import com.baravenski.musicplatform.exception.impl.UploadTrackToTheMlOrAwsServiceException;
@@ -10,6 +12,7 @@ import com.baravenski.musicplatform.track.dto.mapper.TrackMapper;
 import com.baravenski.musicplatform.track.model.Track;
 import com.baravenski.musicplatform.track.repository.TrackRepository;
 import com.baravenski.musicplatform.core.cloud.service.BackblazeFileService;
+import com.baravenski.musicplatform.user.model.User;
 import io.vavr.control.Try;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +20,11 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,7 +50,7 @@ public class TrackService {
 
     @Cacheable(value = "track", key = "#id")
     public TrackResponseDto getTrackById(UUID id) {
-        var trackById = trackRepository.findTrackWithGenresById(id)
+        var trackById = trackRepository.findTrackWithDetailsById(id)
                 .orElseThrow(() -> new TrackNotFoundException(id));
 
         return trackMapper.toDto(trackById);
@@ -54,11 +61,14 @@ public class TrackService {
                 .orElseThrow(() -> new TrackNotFoundException(id));
     }
 
-    @Cacheable("tracks")
-    public List<TrackResponseDto> getAllTracks() {
-        var tracks = trackRepository.findAllWithGenres();
-        log.info("Found {} tracks", tracks.size());
-        return trackMapper.toDtoList(tracks);
+    @Transactional
+    @Cacheable(value = "tracks_page", key = "#page")
+    public PageResponseDto<TrackResponseDto> getAllTracks(int page) {
+        Pageable pageable = PageRequest.of(page, 20, Sort.by("id"));
+        var tracksPage = trackRepository.findAllWithDetails(pageable);
+        fetchGenresForTracks(tracksPage.getContent());
+        var dtoPage = tracksPage.map(trackMapper::toDto);
+        return new PageResponseDto<>(dtoPage);
     }
 
     public List<TrackResponseDto> getTracksByPlaylistId(UUID playlistId) {
@@ -67,8 +77,8 @@ public class TrackService {
     }
 
     @CachePut(value = "track", key = "#result.id()")
-    @CacheEvict(value = "tracks", allEntries = true)
-    public TrackResponseDto uploadTrack(MultipartFile multipartFile) {
+    @CacheEvict(value = "tracks_page", allEntries = true)
+    public TrackResponseDto uploadTrack(MultipartFile multipartFile, User currentUser) {
         var tempFile = Try.of(() -> {
             final var tempFilenamePrefix = "tempAudioFile";
             var tempAudioFile = File.createTempFile(tempFilenamePrefix, multipartFile.getOriginalFilename());
@@ -76,6 +86,7 @@ public class TrackService {
             return tempAudioFile;
         }).getOrElseThrow(exception -> new UploadTrackParsingException());
         var track = trackParser.parseTrack(tempFile, multipartFile);
+        track.setUploadedBy(currentUser);
         trackRepository.save(track);
 
         Try.run(() -> {
@@ -94,21 +105,29 @@ public class TrackService {
         return trackMapper.toDto(track);
     }
 
-    public List<TrackResponseDto> uploadTracks(List<MultipartFile> files) {
+    public List<TrackResponseDto> uploadTracks(List<MultipartFile> files, User cuurentUser) {
         List<TrackResponseDto> uploadTracks = new ArrayList<>();
         for (MultipartFile file : files) {
-            uploadTracks.add(uploadTrack(file));
+            uploadTracks.add(uploadTrack(file, cuurentUser));
         }
         return uploadTracks;
     }
 
+    @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "tracks", allEntries = true),
+            @CacheEvict(value = "tracks_page", allEntries = true),
             @CacheEvict(value = "track", key = "#id")
     })
-    public void deleteTrack(UUID id) {
+    public void deleteTrack(UUID id, User currentUser) {
         var track = trackRepository.findById(id)
                 .orElseThrow(() -> new TrackNotFoundException(id));
+
+        boolean isAdmin = currentUser.getRole() == UserRoles.ADMIN;
+        boolean isOwner = track.getUploadedBy() != null && track.getUploadedBy().getId().equals(currentUser.getId());
+
+        if (!isAdmin && !isOwner) {
+            throw new AccessDeniedException();
+        }
 
         mlService.deleteTrackData(id);
         backblazeFileService.deleteFile(track.getFileName());
@@ -145,6 +164,10 @@ public class TrackService {
     public List<TrackResponseDto> getFavouritesTracksByUserId(UUID userId) {
         var tracks = trackRepository.findTracksByUserId(userId);
         return trackMapper.toDtoList(tracks);
+    }
+
+    public List<UUID> getRecentFavouriteTrackIds(UUID userId, int limit) {
+        return trackRepository.findRecentFavouriteTrackIds(userId, limit);
     }
 
     public void fetchGenresForTracks(List<Track> tracks) {

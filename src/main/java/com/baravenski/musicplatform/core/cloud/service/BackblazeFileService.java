@@ -98,7 +98,7 @@ public class BackblazeFileService {
 
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
                 .getObjectRequest(getObjectRequest)
-                .signatureDuration(Duration.ofMinutes(10))
+                .signatureDuration(Duration.ofMinutes(60))
                 .build();
 
         return s3Presigner.presignGetObject(presignRequest).url().toString();

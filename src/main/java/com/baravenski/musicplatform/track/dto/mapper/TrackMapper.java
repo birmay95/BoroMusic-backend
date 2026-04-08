@@ -14,6 +14,7 @@ public interface TrackMapper {
     @Mapping(target = "genres", source = "genres", qualifiedByName = "mapGenresToStrings")
     @Mapping(target = "artist", source = "artist.name")
     @Mapping(target = "album", source = "album.title")
+    @Mapping(target = "uploadedBy", source = "uploadedBy.id")
     TrackResponseDto toDto(Track track);
 
     List<TrackResponseDto> toDtoList(List<Track> tracks);

@@ -15,6 +15,7 @@ public record TrackResponseDto(
         String contentType,
         Long fileSize,
         Long duration,
-        List<String> genres
+        List<String> genres,
+        UUID uploadedBy
 ) {
 }

@@ -1,6 +1,8 @@
 package com.baravenski.musicplatform.playlist.repository;
 
 import com.baravenski.musicplatform.playlist.model.Playlist;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +23,9 @@ public interface PlaylistRepository extends JpaRepository<Playlist, UUID> {
             """)
     List<Playlist> findPlaylistsByUserId(@Param("userId") UUID userId);
 
-    @Query("SELECT DISTINCT p FROM Playlist p LEFT JOIN FETCH p.tracks")
-    List<Playlist> findAllWithTracks();
+    @Query(value = "SELECT p FROM Playlist p", countQuery = "SELECT count(p) FROM Playlist p")
+    Page<Playlist> findAllPlaylists(Pageable pageable);
+
+    @Query("SELECT p FROM Playlist p LEFT JOIN FETCH p.tracks WHERE p IN :playlists")
+    List<Playlist> fetchTracksForPlaylists(@Param("playlists") List<Playlist> playlists);
 }

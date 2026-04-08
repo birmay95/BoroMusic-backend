@@ -8,8 +8,6 @@ import com.baravenski.musicplatform.auth.dto.TokenRefreshRequest;
 import com.baravenski.musicplatform.auth.service.AuthService;
 import com.baravenski.musicplatform.user.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -18,7 +16,7 @@ import static org.springframework.http.HttpStatus.OK;
 
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -39,15 +37,14 @@ public class AuthController {
 
     @ResponseStatus(OK)
     @PostMapping("/refresh")
-    public AuthResponse refreshtoken(@RequestBody TokenRefreshRequest request) {
+    public AuthResponse refreshToken(@RequestBody TokenRefreshRequest request) {
         return authService.refreshToken(request);
     }
 
     @ResponseStatus(OK)
-    @PostMapping("/logout")
-    public void logout() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        authService.logout(username);
+    @PostMapping("/logout/{userId}")
+    public void logout(@PathVariable UUID userId, @RequestHeader("Authorization") String token) {
+        authService.logout(userId, token);
     }
 
     @ResponseStatus(OK)

@@ -3,6 +3,7 @@ package com.baravenski.musicplatform.album.service;
 import com.baravenski.musicplatform.album.mapper.AlbumMapper;
 import com.baravenski.musicplatform.album.model.Album;
 import com.baravenski.musicplatform.album.repository.AlbumRepository;
+import com.baravenski.musicplatform.artist.model.Artist;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
@@ -18,10 +19,10 @@ public class AlbumService {
     private final AlbumMapper albumMapper;
 
     @Transactional
-    public Album getOrCreateAlbum(String title) {
+    public Album getOrCreateAlbum(String title, Artist artist) {
         return albumRepository.findByTitle(title)
                 .orElseGet(() -> {
-                    var albumToSave = albumMapper.toAlbum(title);
+                    var albumToSave = albumMapper.toAlbum(title, artist);
                     return albumRepository.save(albumToSave);
                 });
     }

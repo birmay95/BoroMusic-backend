@@ -1,6 +1,8 @@
 package com.baravenski.musicplatform.track.repository;
 
 import com.baravenski.musicplatform.track.model.Track;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,12 +17,6 @@ import java.util.UUID;
 public interface TrackRepository extends JpaRepository<Track, UUID> {
 
     Optional<Track> findByFileName(String fileName);
-
-    @Query("SELECT DISTINCT t FROM Track t LEFT JOIN FETCH t.genres WHERE t.id = :trackId")
-    Optional<Track> findTrackWithGenresById(@Param("trackId") UUID trackId);
-
-    @Query("SELECT DISTINCT t FROM Track t LEFT JOIN FETCH t.genres")
-    List<Track> findAllWithGenres();
 
     @Modifying
     @Query(value = "DELETE FROM user_favourites WHERE track_id = CAST(:id AS uuid)", nativeQuery = true)
@@ -49,6 +45,29 @@ public interface TrackRepository extends JpaRepository<Track, UUID> {
             """)
     List<Track> findTracksByUserId(@Param("userId") UUID userId);
 
+    @Query(value = """
+            SELECT track_id FROM user_favourites
+            WHERE user_id = :userId
+            ORDER BY created_at DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<UUID> findRecentFavouriteTrackIds(@Param("userId") UUID userId, @Param("limit") int limit);
+
     @Query("SELECT DISTINCT t FROM Track t LEFT JOIN FETCH t.genres WHERE t IN :tracks")
     List<Track> fetchGenresForTracks(@Param("tracks") List<Track> tracks);
+
+    @Query("SELECT t FROM Track t " +
+            "LEFT JOIN FETCH t.genres " +
+            "LEFT JOIN FETCH t.artist " +
+            "LEFT JOIN FETCH t.album " +
+            "LEFT JOIN FETCH t.uploadedBy " +
+            "WHERE t.id = :id")
+    Optional<Track> findTrackWithDetailsById(@Param("id") UUID id);
+
+    @Query(value = "SELECT t FROM Track t " +
+            "LEFT JOIN FETCH t.artist " +
+            "LEFT JOIN FETCH t.album " +
+            "LEFT JOIN FETCH t.uploadedBy",
+            countQuery = "SELECT count(t) FROM Track t")
+    Page<Track> findAllWithDetails(Pageable pageable);
 }

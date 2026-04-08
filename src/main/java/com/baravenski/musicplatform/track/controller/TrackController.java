@@ -1,14 +1,18 @@
 package com.baravenski.musicplatform.track.controller;
 
+import com.baravenski.musicplatform.core.pagination.PageResponseDto;
 import com.baravenski.musicplatform.track.dto.TrackResponseDto;
 import com.baravenski.musicplatform.core.cloud.service.BackblazeFileService;
 import com.baravenski.musicplatform.track.service.TrackService;
+import com.baravenski.musicplatform.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,19 +27,23 @@ import java.util.UUID;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 
+@Slf4j
 @RestController
-@RequestMapping("/tracks")
+@RequestMapping("api/v1/tracks")
 @RequiredArgsConstructor
 @CrossOrigin
 public class TrackController {
 
     private final TrackService trackService;
     private final BackblazeFileService backblazeFileService;
+    private final UserService userService;
 
     @GetMapping
     @ResponseStatus(OK)
-    public List<TrackResponseDto> getAllTracks() {
-        return trackService.getAllTracks();
+    public PageResponseDto<TrackResponseDto> getAllTracks(@RequestParam(defaultValue = "0") int page) {
+        var tracks = trackService.getAllTracks(page);
+        log.info("getAllTracks returned {}", tracks.getTotalElements());
+        return tracks;
     }
 
     @ResponseStatus(OK)
@@ -48,7 +56,9 @@ public class TrackController {
     public TrackResponseDto uploadFile(
             @RequestParam("file") MultipartFile file
     ) {
-        return trackService.uploadTrack(file);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        var currentUser = userService.findUserByEmailOrUsername(username);
+        return trackService.uploadTrack(file, currentUser);
     }
 
     @ResponseStatus(OK)
@@ -56,13 +66,17 @@ public class TrackController {
     public List<TrackResponseDto> uploadFiles(
             @RequestParam("file") List<MultipartFile> files
     ) {
-        return trackService.uploadTracks(files);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        var currentUser = userService.findUserByEmailOrUsername(username);
+        return trackService.uploadTracks(files, currentUser);
     }
 
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping("/{id}")
     public void deleteTrack(@PathVariable UUID id) {
-        trackService.deleteTrack(id);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        var currentUser = userService.findUserByEmailOrUsername(username);
+        trackService.deleteTrack(id, currentUser);
     }
 
     @ResponseStatus(OK)

@@ -23,7 +23,7 @@ public class SecurityTrackUploadConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public static final String TRACKS_UPLOAD_ENDPOINTS = "/tracks/upload/**";
+    public static final String TRACKS_UPLOAD_ENDPOINTS = "api/v1/tracks/upload/**";
 
     @Bean
     @Order(TRACK_UPLOAD_ORDER)

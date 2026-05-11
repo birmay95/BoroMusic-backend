@@ -15,6 +15,7 @@ import com.baravenski.musicplatform.core.cloud.service.BackblazeFileService;
 import com.baravenski.musicplatform.user.model.User;
 import io.vavr.control.Try;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -37,8 +38,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Slf4j
-@AllArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class TrackService {
 
     private final TrackRepository trackRepository;
@@ -64,10 +65,12 @@ public class TrackService {
     @Transactional
     @Cacheable(value = "tracks_page", key = "#page")
     public PageResponseDto<TrackResponseDto> getAllTracks(int page) {
+        log.info("[LIBRARY] Fetching global track library (Page: {})", page);
         Pageable pageable = PageRequest.of(page, 20, Sort.by("id"));
         var tracksPage = trackRepository.findAllWithDetails(pageable);
         fetchGenresForTracks(tracksPage.getContent());
         var dtoPage = tracksPage.map(trackMapper::toDto);
+        log.info("[LIBRARY] Retrieved {} tracks from database", tracksPage.getNumberOfElements());
         return new PageResponseDto<>(dtoPage);
     }
 
@@ -88,20 +91,39 @@ public class TrackService {
         var track = trackParser.parseTrack(tempFile, multipartFile);
         track.setUploadedBy(currentUser);
         trackRepository.save(track);
+        log.info("Step 0: Primary track record saved in DB with ID: {}", track.getId());
 
         Try.run(() -> {
+            log.info("Step 1: Initiating ML feature extraction...");
             mlService.uploadTrackData(tempFile, track.getId());
+
+            log.info("Step 2: Initiating Cloud Storage upload...");
             backblazeFileService.uploadFile(multipartFile.getOriginalFilename(), tempFile.getAbsolutePath());
+
         }).onFailure(exception -> {
-            log.error("Failed to upload track with name {}", track.getTitle(), exception);
+            log.error("CRITICAL: Failed to complete upload chain for track ID: {}. Reason: {}", track.getId(), exception.getMessage());
+
+            log.warn("Initiating compensatory transaction for track ID: {}", track.getId());
+
+            try {
+                mlService.deleteTrackData(track.getId());
+                log.info("Compensation: ML features deleted for track ID: {}", track.getId());
+            } catch (Exception e) {
+                log.warn("Compensation: ML cleanup skipped (ML service offline)");
+            }
+
             trackRepository.deleteById(track.getId());
+            log.info("Compensation: PostgreSQL metadata deleted for track ID: {}", track.getId());
+
             throw new UploadTrackToTheMlOrAwsServiceException();
+
         }).andFinally(() -> {
             if (!tempFile.delete()) {
-                log.error("Temp file cannot be deleted with name: {}", tempFile.getAbsolutePath());
+                log.error("Temp file cleanup failed: {}", tempFile.getAbsolutePath());
             }
         });
 
+        log.info("Step 3: Finished uploading track ID: {}", track.getId());
         return trackMapper.toDto(track);
     }
 
@@ -135,6 +157,7 @@ public class TrackService {
         transactionTemplate.executeWithoutResult(status -> {
             trackRepository.deleteTrackFromFavourites(id);
             trackRepository.deleteTrackGenres(id);
+            trackRepository.deleteTrackArtists(id);
             trackRepository.deleteTrackFromPlaylists(id);
             trackRepository.deleteById(id);
         });

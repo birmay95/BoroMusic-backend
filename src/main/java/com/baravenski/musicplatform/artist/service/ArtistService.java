@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @NullMarked
 @RequiredArgsConstructor
@@ -24,5 +26,20 @@ public class ArtistService {
                     var artistToSave = artistMapper.toArtist(name);
                     return artistRepository.save(artistToSave);
                 });
+    }
+
+    @Transactional
+    public List<Artist> getOrCreateArtists(String artistsString) {
+        if (artistsString == null || artistsString.isBlank()) {
+            return List.of(getOrCreateArtist("Unknown Artist"));
+        }
+
+        String[] artistNames = artistsString.split("[,&]|\\s+(?i)(feat\\.?|ft\\.?)\\s+");
+
+        return java.util.Arrays.stream(artistNames)
+                .map(String::trim)
+                .filter(name -> !name.isEmpty())
+                .map(this::getOrCreateArtist)
+                .toList();
     }
 }

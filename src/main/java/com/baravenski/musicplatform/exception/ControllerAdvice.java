@@ -38,7 +38,6 @@ public class ControllerAdvice {
             WeakPasswordException.class,
             IncorrectVerificationTokenException.class,
             BadCredentialsException.class,
-            BruteForceLockException.class,
             InvalidTokenException.class,
     })
     public ResponseEntity<ExceptionMessageDto> handleBadRequestException(
@@ -46,6 +45,14 @@ public class ControllerAdvice {
             final WebRequest request
     ) {
         return responseBuilder.build(BAD_REQUEST, exception, request, false);
+    }
+
+    @ExceptionHandler(BruteForceLockException.class)
+    public ResponseEntity<ExceptionMessageDto> handleLockedException(
+            final Exception exception,
+            final WebRequest request
+    ) {
+        return responseBuilder.build(LOCKED, exception, request, false);
     }
 
     @ExceptionHandler({

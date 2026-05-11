@@ -57,11 +57,13 @@ public class UserService {
     }
 
     public void addFavourite(UUID id, UUID trackId) {
+        log.info("[USER-FAV] User ID: {} is adding Track ID: {} to Favourites", id, trackId);
         var user = userRepository.findUserWithFavourites(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
         var track = trackService.findTrackById(trackId);
 
         user.getFavourites().add(track);
+        log.info("[USER-FAV] Track successfully saved to user's favourite list in DB");
         userRepository.save(user);
     }
 

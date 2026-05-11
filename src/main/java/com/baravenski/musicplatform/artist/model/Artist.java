@@ -44,7 +44,7 @@ public class Artist {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "artist")
+    @ManyToMany(mappedBy = "artists")
     private List<Track> tracks;
 
     @OneToMany(mappedBy = "artist")

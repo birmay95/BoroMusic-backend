@@ -141,13 +141,6 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: artist_id
-                  type: uuid
-                  constraints:
-                    nullable: false
-                    references: artists(id)
-                    foreignKeyName: fk_track_artist
-              - column:
                   name: album_id
                   type: uuid
                   constraints:
@@ -361,6 +354,28 @@ databaseChangeLog:
             constraintName: pk_playlist_tracks
 
         - createTable:
+            tableName: track_artists
+            columns:
+              - column:
+                  name: track_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: tracks(id)
+                    foreignKeyName: fk_ta_track
+              - column:
+                  name: artist_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: artists(id)
+                    foreignKeyName: fk_ta_artist
+        - addPrimaryKey:
+            tableName: track_artists
+            columnNames: track_id, artist_id
+            constraintName: pk_track_artists
+
+        - createTable:
             tableName: track_genres
             columns:
               - column:
@@ -389,7 +404,6 @@ databaseChangeLog:
         - createIndex: { indexName: idx_users_created_at, tableName: users, columns: [{ column: { name: created_at } }] }
 
         - createIndex: { indexName: idx_tracks_created_at, tableName: tracks, columns: [{ column: { name: created_at } }] }
-        - createIndex: { indexName: idx_tracks_artist_id, tableName: tracks, columns: [{ column: { name: artist_id } }] }
         - createIndex: { indexName: idx_tracks_album_id, tableName: tracks, columns: [{ column: { name: album_id } }] }
         - createIndex: { indexName: idx_tracks_uploaded_by, tableName: tracks, columns: [{ column: { name: uploaded_by } }] }
 
@@ -411,6 +425,7 @@ databaseChangeLog:
         - createIndex: { indexName: idx_user_fav_created_at, tableName: user_favourites, columns: [{ column: { name: created_at } }] }
         - createIndex: { indexName: idx_pt_track_id, tableName: playlist_tracks, columns: [{ column: { name: track_id } }] }
         - createIndex: { indexName: idx_tg_genre_id, tableName: track_genres, columns: [{ column: { name: genre_id } }] }
+        - createIndex: { indexName: idx_ta_artist_id, tableName: track_artists, columns: [{ column: { name: artist_id } }] }
 
   - changeSet:
       id: 012-create-gin-indexes

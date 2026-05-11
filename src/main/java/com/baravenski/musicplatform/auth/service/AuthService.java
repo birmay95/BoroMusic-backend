@@ -50,10 +50,12 @@ public class AuthService {
 
     public AuthResponse authorize(AuthRequest authRequest) {
         String login = authRequest.getUsername();
+        log.info("[AUTH] Attempting login for user: {}", login);
 
         String lockKey = "login_locked:" + login;
         if (redisTemplate.hasKey(lockKey)) {
             long lockTimeLeft = redisTemplate.getExpire(lockKey, TimeUnit.MINUTES);
+            log.warn("[AUTH] Login blocked for {}. Brute-force protection active ({} min left)", login, lockTimeLeft);
             throw new BruteForceLockException(lockTimeLeft);
         }
 
@@ -61,10 +63,12 @@ public class AuthService {
         try {
             user = userService.findUserByEmailOrUsername(authRequest.getUsername());
         } catch (UserNotFoundByLoginException exception) {
+            log.warn("[AUTH] Login failed: User {} not found", login);
             registerFailedAttempt(login);
             throw new BadCredentialsException("User not found");
         }
         if (!passwordEncoder.matches(authRequest.getPassword(), user.getPassword())) {
+            log.warn("[AUTH] Login failed: Invalid password for user {}", login);
             registerFailedAttempt(login);
             throw new BadCredentialsException("Wrong password");
         }
@@ -77,6 +81,7 @@ public class AuthService {
         String accessToken = JwtUtil.generateToken(authentication);
         RefreshToken refreshToken = refreshTokenService.createOrUpdateRefreshToken(user.getId());
 
+        log.info("[AUTH] Login successful! Tokens generated for user: {}", login);
         return new AuthResponse(accessToken, refreshToken.getToken(), userMapper.toDto(user));
     }
 
@@ -100,9 +105,10 @@ public class AuthService {
     }
 
     public AuthResponse register(AuthRegister authRegister) {
+        log.info("[AUTH] Starting registration process for new user: {}", authRegister.getUsername());
         var user = userService.saveUserByRegistration(authRegister);
         var token = verificationTokenService.createVerificationToken(user);
-        log.info("Confirmation token for {} creation: {}", authRegister.getUsername(), token.getToken());
+        log.info("[AUTH] Verification token generated. Triggering EmailService for {}", authRegister.getEmail());
         emailService.sendVerificationEmail(user, token.getToken());
 
         var authentication = authenticationManager.authenticate(
@@ -111,6 +117,8 @@ public class AuthService {
 
         String accessToken = JwtUtil.generateToken(authentication);
         RefreshToken refreshToken = refreshTokenService.createOrUpdateRefreshToken(user.getId());
+
+        log.info("[AUTH] User {} successfully registered and saved to database", user.getUsername());
         return new AuthResponse(accessToken, refreshToken.getToken(), userMapper.toDto(user));
     }
 

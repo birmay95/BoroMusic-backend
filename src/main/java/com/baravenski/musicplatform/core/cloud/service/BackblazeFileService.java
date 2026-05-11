@@ -90,6 +90,7 @@ public class BackblazeFileService {
 
 
     public String generateTemporaryUrl(String objectKey) {
+        log.info("[CLOUD-STORAGE] Requesting secure Presigned URL for file: {}", objectKey);
 
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
@@ -101,6 +102,7 @@ public class BackblazeFileService {
                 .signatureDuration(Duration.ofMinutes(60))
                 .build();
 
+        log.info("[CLOUD-STORAGE] Presigned URL generated successfully (Valid for 60 minutes)");
         return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 }

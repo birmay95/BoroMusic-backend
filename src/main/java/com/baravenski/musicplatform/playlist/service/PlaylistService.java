@@ -11,6 +11,7 @@ import com.baravenski.musicplatform.playlist.repository.PlaylistRepository;
 import com.baravenski.musicplatform.track.service.TrackService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PlaylistService {
@@ -35,14 +37,17 @@ public class PlaylistService {
     @CachePut(value = "playlist", key = "#result.id")
     @CacheEvict(value = "playlists_page", allEntries = true)
     public PlaylistResponseDto createPlaylist(PlaylistRequestDto playlistRequestDto) {
+        log.info("[PLAYLIST] Creating new playlist: '{}'", playlistRequestDto.name());
         var playlistToSave = playlistMapper.toEntity(playlistRequestDto);
         var playlistSaved = playlistRepository.save(playlistToSave);
+        log.info("[PLAYLIST] Playlist '{}' successfully saved to DB with ID: {}", playlistSaved.getName(), playlistSaved.getId());
         return playlistMapper.toDto(playlistSaved);
     }
 
     @Transactional
     @CacheEvict(value = "playlists_page", allEntries = true)
     public PlaylistWithTracksResponseDto addTrackToPlaylist(UUID id, UUID trackId) {
+        log.info("[PLAYLIST] Adding Track ID: {} to Playlist ID: {}", trackId, id);
         var playlist = playlistRepository.findPlaylistWithTracksById(id)
                 .orElseThrow(() -> new PlaylistNotFoundException(id));
         var track = trackService.findTrackById(trackId);

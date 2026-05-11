@@ -30,6 +30,10 @@ public interface TrackRepository extends JpaRepository<Track, UUID> {
     @Query(value = "DELETE FROM track_genres WHERE track_id = CAST(:id AS uuid)", nativeQuery = true)
     void deleteTrackGenres(@Param("id") UUID id);
 
+    @Modifying
+    @Query(value = "DELETE FROM track_artists WHERE track_id = CAST(:id AS uuid)", nativeQuery = true)
+    void deleteTrackArtists(@Param("id") UUID id);
+
     @Query("""
                     SELECT tracks FROM Playlist playlist
                     JOIN playlist.tracks tracks
@@ -41,6 +45,9 @@ public interface TrackRepository extends JpaRepository<Track, UUID> {
                     SELECT tracks FROM User user
                     JOIN user.favourites tracks
                     LEFT JOIN FETCH tracks.genres
+                    LEFT JOIN FETCH tracks.artists
+                    LEFT JOIN FETCH tracks.album
+                    LEFT JOIN FETCH tracks.uploadedBy
                     WHERE user.id = :userId
             """)
     List<Track> findTracksByUserId(@Param("userId") UUID userId);
@@ -58,14 +65,14 @@ public interface TrackRepository extends JpaRepository<Track, UUID> {
 
     @Query("SELECT t FROM Track t " +
             "LEFT JOIN FETCH t.genres " +
-            "LEFT JOIN FETCH t.artist " +
+            "LEFT JOIN FETCH t.artists " +
             "LEFT JOIN FETCH t.album " +
             "LEFT JOIN FETCH t.uploadedBy " +
             "WHERE t.id = :id")
     Optional<Track> findTrackWithDetailsById(@Param("id") UUID id);
 
     @Query(value = "SELECT t FROM Track t " +
-            "LEFT JOIN FETCH t.artist " +
+            "LEFT JOIN FETCH t.artists " +
             "LEFT JOIN FETCH t.album " +
             "LEFT JOIN FETCH t.uploadedBy",
             countQuery = "SELECT count(t) FROM Track t")

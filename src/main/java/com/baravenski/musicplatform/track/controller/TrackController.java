@@ -82,7 +82,12 @@ public class TrackController {
     @ResponseStatus(OK)
     @GetMapping("/temporary-url")
     public String getTemporaryUrl(@RequestParam("fileName") String fileName) {
-        return backblazeFileService.generateTemporaryUrl(fileName);
+        log.info("[STREAM] Client requested playback access for file: {}", fileName);
+
+        String temporaryUrl = backblazeFileService.generateTemporaryUrl(fileName);
+        log.info("[STREAM] Returning secure temporary S3 link to mobile client");
+
+        return temporaryUrl;
     }
 
     @GetMapping("/buckets")

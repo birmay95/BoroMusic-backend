@@ -26,6 +26,7 @@ public class ArtistRequest {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Enumerated(EnumType.STRING)
     private ArtistRequestStatus status;
 
     private String requestedName;

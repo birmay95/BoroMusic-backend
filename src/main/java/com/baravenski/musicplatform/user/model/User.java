@@ -6,8 +6,26 @@ import com.baravenski.musicplatform.core.security.enums.UserRoles;
 import com.baravenski.musicplatform.playlist.model.Playlist;
 import com.baravenski.musicplatform.verificationtoken.model.VerificationToken;
 import com.baravenski.musicplatform.track.model.Track;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -62,4 +80,3 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
     private List<Playlist> playlists;
 }
-

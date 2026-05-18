@@ -7,6 +7,7 @@ import static com.baravenski.musicplatform.exception.constant.ExceptionConstants
 
 @NullMarked
 public class UploadTrackParsingException extends MusicPlatformException {
+
     public UploadTrackParsingException() {
         super(UPLOAD_TO_THE_ML_SERVICE_EXCEPTION_MESSAGE);
     }

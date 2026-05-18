@@ -12,6 +12,7 @@ import com.baravenski.musicplatform.track.service.TrackService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -27,6 +28,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@NullMarked
 @RequiredArgsConstructor
 public class PlaylistService {
 

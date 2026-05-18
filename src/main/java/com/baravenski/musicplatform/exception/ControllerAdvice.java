@@ -2,15 +2,40 @@ package com.baravenski.musicplatform.exception;
 
 import com.baravenski.musicplatform.exception.builder.ExceptionResponseBuilder;
 import com.baravenski.musicplatform.exception.dto.ExceptionMessageDto;
-import com.baravenski.musicplatform.exception.impl.*; // Убедись, что импорты совпадают с твоей структурой
+import com.baravenski.musicplatform.exception.impl.ArtistRequestNotFoundByUserIdException;
+import com.baravenski.musicplatform.exception.impl.ArtistRequestNotFoundException;
+import com.baravenski.musicplatform.exception.impl.BadCredentialsException;
+import com.baravenski.musicplatform.exception.impl.BruteForceLockException;
+import com.baravenski.musicplatform.exception.impl.DeleteTrackToTheMlServiceException;
+import com.baravenski.musicplatform.exception.impl.IncorrectPasswordException;
+import com.baravenski.musicplatform.exception.impl.IncorrectVerificationTokenException;
+import com.baravenski.musicplatform.exception.impl.InvalidTokenException;
+import com.baravenski.musicplatform.exception.impl.PlaylistNotFoundException;
+import com.baravenski.musicplatform.exception.impl.RecommendationException;
+import com.baravenski.musicplatform.exception.impl.TokenNotFoundException;
+import com.baravenski.musicplatform.exception.impl.TrackNotFoundException;
+import com.baravenski.musicplatform.exception.impl.UploadTrackToTheMlOrAwsServiceException;
+import com.baravenski.musicplatform.exception.impl.UserNotFoundException;
+import com.baravenski.musicplatform.exception.impl.UserWithEmailAlreadyExistsException;
+import com.baravenski.musicplatform.exception.impl.UserWithNameAlreadyExistsException;
+import com.baravenski.musicplatform.exception.impl.VerificationTokenNotFoundByUserIdException;
+import com.baravenski.musicplatform.exception.impl.WeakPasswordException;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.HttpStatus.BAD_GATEWAY;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.LOCKED;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
+
+@NullMarked
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class ControllerAdvice {

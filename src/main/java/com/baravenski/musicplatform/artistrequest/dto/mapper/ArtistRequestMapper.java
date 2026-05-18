@@ -5,7 +5,6 @@ import com.baravenski.musicplatform.artistrequest.dto.ArtistRequestResponseDto;
 import com.baravenski.musicplatform.artistrequest.model.ArtistRequest;
 import com.baravenski.musicplatform.user.dto.mapper.UserMapper;
 import com.baravenski.musicplatform.user.model.User;
-import com.baravenski.musicplatform.user.service.UserService;
 import org.jspecify.annotations.NullMarked;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

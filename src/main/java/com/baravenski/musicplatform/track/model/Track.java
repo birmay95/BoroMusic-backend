@@ -94,5 +94,3 @@ public class Track {
     @ManyToMany(mappedBy = "tracks")
     private List<Playlist> playlists;
 }
-
-

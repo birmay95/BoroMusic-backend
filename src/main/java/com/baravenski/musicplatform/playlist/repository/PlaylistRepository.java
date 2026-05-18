@@ -1,6 +1,7 @@
 package com.baravenski.musicplatform.playlist.repository;
 
 import com.baravenski.musicplatform.playlist.model.Playlist;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@NullMarked
 public interface PlaylistRepository extends JpaRepository<Playlist, UUID> {
 
     @Query("SELECT DISTINCT p FROM Playlist p LEFT JOIN FETCH p.tracks WHERE p.id = :playlistId")

@@ -8,7 +8,7 @@ import com.baravenski.musicplatform.auth.model.RefreshToken;
 import com.baravenski.musicplatform.core.email.service.EmailService;
 import com.baravenski.musicplatform.exception.impl.BadCredentialsException;
 import com.baravenski.musicplatform.exception.impl.BruteForceLockException;
-import com.baravenski.musicplatform.exception.TokenNotFoundException;
+import com.baravenski.musicplatform.exception.impl.TokenNotFoundException;
 import com.baravenski.musicplatform.exception.impl.InvalidTokenException;
 import com.baravenski.musicplatform.exception.impl.UserNotFoundByLoginException;
 import com.baravenski.musicplatform.user.dto.mapper.UserMapper;
@@ -18,6 +18,7 @@ import com.baravenski.musicplatform.core.security.util.JwtUtil;
 import com.baravenski.musicplatform.verificationtoken.service.VerificationTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
+@NullMarked
 @RequiredArgsConstructor
 public class AuthService {
 

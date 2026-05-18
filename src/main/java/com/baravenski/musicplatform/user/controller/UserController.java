@@ -4,6 +4,7 @@ import com.baravenski.musicplatform.auth.dto.ChangePasswordRequest;
 import com.baravenski.musicplatform.user.dto.UserResponseDto;
 import com.baravenski.musicplatform.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -11,6 +12,7 @@ import java.util.UUID;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 
+@NullMarked
 @RestController
 @RequestMapping("api/v1/users")
 @RequiredArgsConstructor

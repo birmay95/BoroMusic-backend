@@ -1,12 +1,14 @@
 package com.baravenski.musicplatform.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
 @Service
+@NullMarked
 @RequiredArgsConstructor
 public class TokenBlacklistService {
 

@@ -4,10 +4,12 @@ import com.baravenski.musicplatform.auth.dto.AuthRegister;
 import com.baravenski.musicplatform.core.security.enums.UserRoles;
 import com.baravenski.musicplatform.user.dto.UserResponseDto;
 import com.baravenski.musicplatform.user.model.User;
+import org.jspecify.annotations.NullMarked;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
+@NullMarked
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 

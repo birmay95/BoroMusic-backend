@@ -5,6 +5,7 @@ import com.baravenski.musicplatform.user.model.User;
 import com.baravenski.musicplatform.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@NullMarked
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
@@ -45,4 +47,3 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 }
-

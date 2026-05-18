@@ -7,13 +7,21 @@ import com.baravenski.musicplatform.track.service.TrackService;
 import com.baravenski.musicplatform.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -28,10 +36,10 @@ import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 
 @Slf4j
+@NullMarked
 @RestController
 @RequestMapping("api/v1/tracks")
 @RequiredArgsConstructor
-@CrossOrigin
 public class TrackController {
 
     private final TrackService trackService;
@@ -41,9 +49,7 @@ public class TrackController {
     @GetMapping
     @ResponseStatus(OK)
     public PageResponseDto<TrackResponseDto> getAllTracks(@RequestParam(defaultValue = "0") int page) {
-        var tracks = trackService.getAllTracks(page);
-//        log.info("getAllTracks returned {}", tracks.getTotalElements());
-        return tracks;
+        return trackService.getAllTracks(page);
     }
 
     @ResponseStatus(OK)

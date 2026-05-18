@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.jspecify.annotations.NullMarked;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -13,6 +14,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
+@NullMarked
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "verification_token")

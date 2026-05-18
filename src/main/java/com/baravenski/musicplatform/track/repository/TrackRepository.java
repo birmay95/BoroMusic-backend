@@ -1,6 +1,7 @@
 package com.baravenski.musicplatform.track.repository;
 
 import com.baravenski.musicplatform.track.model.Track;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@NullMarked
 @Repository
 public interface TrackRepository extends JpaRepository<Track, UUID> {
 

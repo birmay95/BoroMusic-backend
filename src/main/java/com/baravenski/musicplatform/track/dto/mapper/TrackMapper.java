@@ -4,12 +4,14 @@ import com.baravenski.musicplatform.artist.model.Artist;
 import com.baravenski.musicplatform.genre.mapper.GenreMapper;
 import com.baravenski.musicplatform.track.dto.TrackResponseDto;
 import com.baravenski.musicplatform.track.model.Track;
+import org.jspecify.annotations.NullMarked;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@NullMarked
 @Mapper(componentModel = "spring", uses = GenreMapper.class)
 public interface TrackMapper {
 

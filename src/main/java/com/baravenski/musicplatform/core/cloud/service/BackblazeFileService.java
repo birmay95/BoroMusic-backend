@@ -83,7 +83,7 @@ public class BackblazeFileService {
                     .build();
             return s3Client.getObject(getObjectRequest);
         } catch (Exception e) {
-            log.error("Error when downloading: " + e.getMessage());
+            log.error("Error when downloading: {}", e.getMessage());
             return null;
         }
     }

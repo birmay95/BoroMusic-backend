@@ -5,7 +5,6 @@ import com.baravenski.musicplatform.auth.dto.AuthRegister;
 import com.baravenski.musicplatform.auth.dto.ChangePasswordRequest;
 import com.baravenski.musicplatform.core.email.service.EmailService;
 import com.baravenski.musicplatform.exception.impl.IncorrectVerificationTokenException;
-import com.baravenski.musicplatform.exception.impl.VerificationTokenNotFoundByUserIdException;
 import com.baravenski.musicplatform.exception.impl.WeakPasswordException;
 import com.baravenski.musicplatform.exception.impl.IncorrectPasswordException;
 import com.baravenski.musicplatform.exception.impl.UserNotFoundByLoginException;
@@ -20,6 +19,7 @@ import com.baravenski.musicplatform.user.model.User;
 import com.baravenski.musicplatform.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
 import org.mapstruct.Named;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,6 +29,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@NullMarked
 @Transactional
 @RequiredArgsConstructor
 public class UserService {

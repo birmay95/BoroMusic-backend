@@ -8,4 +8,5 @@ import java.util.List;
 public record MlPersonalRecommendRequest(
         List<String> liked_track_ids,
         List<String> excluded_ids
-) {}
+) {
+}

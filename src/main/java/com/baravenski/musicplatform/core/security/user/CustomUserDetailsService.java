@@ -2,12 +2,14 @@ package com.baravenski.musicplatform.core.security.user;
 
 import com.baravenski.musicplatform.user.service.UserService;
 import lombok.AllArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 @Service
+@NullMarked
 @AllArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -25,4 +27,3 @@ public class CustomUserDetailsService implements UserDetailsService {
         );
     }
 }
-

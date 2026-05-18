@@ -2,7 +2,6 @@ package com.baravenski.musicplatform.auth.service;
 
 import com.baravenski.musicplatform.auth.model.RefreshToken;
 import com.baravenski.musicplatform.auth.repository.RefreshTokenRepository;
-import com.baravenski.musicplatform.exception.TokenNotFoundException;
 import com.baravenski.musicplatform.user.model.User;
 import com.baravenski.musicplatform.user.service.UserService;
 import lombok.RequiredArgsConstructor;

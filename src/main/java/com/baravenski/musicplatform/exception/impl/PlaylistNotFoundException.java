@@ -9,6 +9,7 @@ import static com.baravenski.musicplatform.exception.constant.ExceptionConstants
 
 @NullMarked
 public class PlaylistNotFoundException extends MusicPlatformException {
+
     public PlaylistNotFoundException(UUID id) {
         super(PLAYLIST_NOT_FOUND.formatted(id));
     }

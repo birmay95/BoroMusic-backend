@@ -33,7 +33,8 @@ public class TrackParser {
     private final AlbumService albumService;
     private final ExternalMetadataService externalMetadataService;
 
-    private record ParsedMetadata(String title, String artist) {}
+    private record ParsedMetadata(String title, String artist) {
+    }
 
     public Track parseTrack(File file, MultipartFile multipartFile) {
         var audioFile = Try.of(() -> AudioFileIO.read(file))

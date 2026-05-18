@@ -2,6 +2,7 @@ package com.baravenski.musicplatform.core.security.config;
 
 import com.baravenski.musicplatform.core.security.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+@NullMarked
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -29,12 +31,11 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/api/v1/auth/login").permitAll()
-                                .requestMatchers("/api/v1/auth/register").permitAll()
-                                .requestMatchers("/api/v1/auth/refresh").permitAll()
-                                .requestMatchers("/api/v1/auth/logout/{userId}").permitAll()
-//                        .requestMatchers("/api/v1/tracks/download/{fileName}").permitAll()
-                                .anyRequest().authenticated()
+                        .requestMatchers("/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/auth/register").permitAll()
+                        .requestMatchers("/api/v1/auth/refresh").permitAll()
+                        .requestMatchers("/api/v1/auth/logout/{userId}").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

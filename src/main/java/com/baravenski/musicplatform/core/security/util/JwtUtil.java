@@ -4,6 +4,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import java.util.Date;
 import java.util.function.Function;
 
 @Component
+@NullMarked
 public class JwtUtil {
 
     private static final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
@@ -44,7 +46,7 @@ public class JwtUtil {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public static  <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    public static <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }

@@ -7,6 +7,7 @@ import com.baravenski.musicplatform.track.dto.TrackResponseDto;
 import com.baravenski.musicplatform.user.model.User;
 import com.baravenski.musicplatform.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.OK;
 
+@NullMarked
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/recommendations")

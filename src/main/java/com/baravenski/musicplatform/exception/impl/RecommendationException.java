@@ -7,6 +7,7 @@ import static com.baravenski.musicplatform.exception.constant.ExceptionConstants
 
 @NullMarked
 public class RecommendationException extends MusicPlatformException {
+
     public RecommendationException() {
         super(FETCH_RECS_EXCEPTION_MESSAGE);
     }

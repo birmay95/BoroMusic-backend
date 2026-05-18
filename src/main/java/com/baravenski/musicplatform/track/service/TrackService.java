@@ -14,7 +14,6 @@ import com.baravenski.musicplatform.track.repository.TrackRepository;
 import com.baravenski.musicplatform.core.cloud.service.BackblazeFileService;
 import com.baravenski.musicplatform.user.model.User;
 import io.vavr.control.Try;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -148,7 +147,7 @@ public class TrackService {
                 .orElseThrow(() -> new TrackNotFoundException(id));
 
         boolean isAdmin = currentUser.getRole() == UserRoles.ADMIN;
-        boolean isOwner = track.getUploadedBy() != null && track.getUploadedBy().getId().equals(currentUser.getId());
+        boolean isOwner = track.getUploadedBy().getId().equals(currentUser.getId());
 
         if (!isAdmin && !isOwner) {
             throw new AccessDeniedException();

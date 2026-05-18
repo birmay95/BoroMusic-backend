@@ -1,9 +1,11 @@
 package com.baravenski.musicplatform.exception.constant;
 
 import lombok.NoArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 
 import static lombok.AccessLevel.PRIVATE;
 
+@NullMarked
 @NoArgsConstructor(access = PRIVATE)
 public final class ExceptionConstants {
     public static final String TRACK_NOT_FOUND_BY_ID = "Track not found by id: %s";

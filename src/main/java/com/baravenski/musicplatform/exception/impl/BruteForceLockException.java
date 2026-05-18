@@ -7,6 +7,7 @@ import static com.baravenski.musicplatform.exception.constant.ExceptionConstants
 
 @NullMarked
 public class BruteForceLockException extends MusicPlatformException {
+
     public BruteForceLockException(long blockTime) {
         super(BRUTE_FORCE_LOCK.formatted(blockTime));
     }

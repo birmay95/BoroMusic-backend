@@ -36,7 +36,7 @@ public class RecommendationService {
                     try {
                         return trackService.getTrackById(rec.trackId());
                     } catch (Exception e) {
-                        return null; // Если трек почему-то удален
+                        return null;
                     }
                 })
                 .filter(java.util.Objects::nonNull)

@@ -20,8 +20,6 @@ public interface PlaylistMapper {
 
     PlaylistResponseDto toDto(Playlist playlist);
 
-    List<PlaylistWithTracksResponseDto> toDtoListWithTracks(List<Playlist> playlists);
-
     List<PlaylistResponseDto> toDtoList(List<Playlist> playlists);
 
     @Mapping(source = "userId", target = "user", qualifiedByName = "findUserById")

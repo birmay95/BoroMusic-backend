@@ -31,11 +31,6 @@ public class RefreshTokenService {
         User user = userService.findUserById(userId);
         RefreshToken refreshToken = user.getRefreshToken();
 
-        if (refreshToken == null) {
-            refreshToken = new RefreshToken();
-            refreshToken.setUser(user);
-        }
-
         refreshToken.setToken(UUID.randomUUID().toString());
         refreshToken.setExpiryDate(LocalDateTime.now().plusDays(REFRESH_TOKEN_EXPIRATION_DAYS));
 

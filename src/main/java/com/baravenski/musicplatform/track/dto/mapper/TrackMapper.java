@@ -24,7 +24,7 @@ public interface TrackMapper {
     List<TrackResponseDto> toDtoList(List<Track> tracks);
 
     default String mapArtistsToString(List<Artist> artists) {
-        if (artists == null || artists.isEmpty()) {
+        if (artists.isEmpty()) {
             return "Unknown Artist";
         }
         return artists.stream()

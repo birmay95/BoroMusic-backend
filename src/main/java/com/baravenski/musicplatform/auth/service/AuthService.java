@@ -139,11 +139,11 @@ public class AuthService {
 
     public void logout(UUID id, String token) {
         String actualToken = token;
-        if (token != null && token.startsWith("Bearer ")) {
+        if (token.startsWith("Bearer ")) {
             actualToken = token.substring(7);
         }
 
-        if (actualToken == null || JwtUtil.isTokenExpired(actualToken) || tokenBlacklistService.isTokenBlacklisted(actualToken)) {
+        if (JwtUtil.isTokenExpired(actualToken) || tokenBlacklistService.isTokenBlacklisted(actualToken)) {
             throw new InvalidTokenException();
         }
 

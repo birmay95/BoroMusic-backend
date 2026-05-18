@@ -3,6 +3,7 @@ package com.baravenski.musicplatform.recommendation.controller;
 import com.baravenski.musicplatform.recommendation.dto.ExcludedTracksRequest;
 import com.baravenski.musicplatform.recommendation.dto.RecommendationDto;
 import com.baravenski.musicplatform.recommendation.service.RecommendationService;
+import com.baravenski.musicplatform.track.dto.TrackResponseDto;
 import com.baravenski.musicplatform.user.model.User;
 import com.baravenski.musicplatform.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class RecommendationController {
 
     @ResponseStatus(OK)
     @PostMapping("/{trackId}")
-    public List<RecommendationDto> getRecommendations(
+    public List<TrackResponseDto> getRecommendations(
             @PathVariable UUID trackId,
             @RequestBody(required = false) ExcludedTracksRequest excludedTracksRequest
     ) {

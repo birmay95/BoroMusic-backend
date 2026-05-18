@@ -35,7 +35,7 @@ public class ExternalMetadataService {
         try {
             String searchQuery = artist.trim() + " " + title.trim();
 
-            log.info("[EXTERNAL-API] Searching metadata in iTunes for: {}", searchQuery);
+//            log.info("[EXTERNAL-API] Searching metadata in iTunes for: {}", searchQuery);
 
             var response = restClient.get()
                     .uri(uriBuilder -> uriBuilder
@@ -51,11 +51,11 @@ public class ExternalMetadataService {
 
             if (response != null && response.resultCount() != null && response.resultCount() > 0) {
                 ItunesTrack track = response.results().get(0);
-                log.info("[EXTERNAL-API] Found! Album: {}, Genre: {}", track.collectionName(), track.primaryGenreName());
+//                log.info("[EXTERNAL-API] Found! Album: {}, Genre: {}", track.collectionName(), track.primaryGenreName());
                 return Optional.of(track);
             }
         } catch (Exception e) {
-            log.error("[EXTERNAL-API] Failed to fetch metadata from iTunes: {}", e.getMessage());
+//            log.error("[EXTERNAL-API] Failed to fetch metadata from iTunes: {}", e.getMessage());
         }
 
         return Optional.empty();

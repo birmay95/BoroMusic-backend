@@ -49,10 +49,13 @@ public class TrackService {
     private final MlService mlService;
     private final TransactionTemplate transactionTemplate;
 
+    @Transactional
     @Cacheable(value = "track", key = "#id")
     public TrackResponseDto getTrackById(UUID id) {
         var trackById = trackRepository.findTrackWithDetailsById(id)
                 .orElseThrow(() -> new TrackNotFoundException(id));
+
+        fetchGenresForTracks(List.of(trackById));
 
         return trackMapper.toDto(trackById);
     }
@@ -184,8 +187,10 @@ public class TrackService {
                 .orElseThrow(() -> new TrackNotFoundException(fileName));
     }
 
+    @Transactional
     public List<TrackResponseDto> getFavouritesTracksByUserId(UUID userId) {
         var tracks = trackRepository.findTracksByUserId(userId);
+        fetchGenresForTracks(tracks);
         return trackMapper.toDtoList(tracks);
     }
 

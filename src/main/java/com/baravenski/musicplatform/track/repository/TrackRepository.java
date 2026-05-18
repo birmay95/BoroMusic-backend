@@ -44,7 +44,6 @@ public interface TrackRepository extends JpaRepository<Track, UUID> {
     @Query("""
                     SELECT tracks FROM User user
                     JOIN user.favourites tracks
-                    LEFT JOIN FETCH tracks.genres
                     LEFT JOIN FETCH tracks.artists
                     LEFT JOIN FETCH tracks.album
                     LEFT JOIN FETCH tracks.uploadedBy
@@ -64,7 +63,6 @@ public interface TrackRepository extends JpaRepository<Track, UUID> {
     List<Track> fetchGenresForTracks(@Param("tracks") List<Track> tracks);
 
     @Query("SELECT t FROM Track t " +
-            "LEFT JOIN FETCH t.genres " +
             "LEFT JOIN FETCH t.artists " +
             "LEFT JOIN FETCH t.album " +
             "LEFT JOIN FETCH t.uploadedBy " +

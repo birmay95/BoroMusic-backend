@@ -42,7 +42,7 @@ public class TrackController {
     @ResponseStatus(OK)
     public PageResponseDto<TrackResponseDto> getAllTracks(@RequestParam(defaultValue = "0") int page) {
         var tracks = trackService.getAllTracks(page);
-        log.info("getAllTracks returned {}", tracks.getTotalElements());
+//        log.info("getAllTracks returned {}", tracks.getTotalElements());
         return tracks;
     }
 
